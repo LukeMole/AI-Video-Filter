@@ -1,6 +1,4 @@
-diffusers[torch]
+diffusers
 huggingface_hub
 transformers
 accelerate
-sentencepiece
-protobuf
