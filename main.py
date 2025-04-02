@@ -7,17 +7,28 @@ import moviepy
 import os
 from PIL import Image
 import math
+import sys
 
 
-model = "stabilityai/stable-diffusion-xl-refiner-1.0"
-pipe = StableDiffusionXLImg2ImgPipeline.from_pretrained(
-model, torch_dtype=torch.float16, variant="fp16", use_safetensors=True
-)
-pipe = pipe.to("mps")
+def initialise_ai(compute_device):
+    OS = sys.platform
+
+    model = "stabilityai/stable-diffusion-xl-refiner-1.0"
+    pipe = StableDiffusionXLImg2ImgPipeline.from_pretrained(
+    model, torch_dtype=torch.float16, variant="fp16", use_safetensors=True
+    )
+    if compute_device == 'GPU':
+        if OS == 'darwin':
+            pipe = pipe.to("mps")
+        else:
+            pipe = pipe.to("cuda")
+    else:
+        pipe = pipe.to('cpu')
+    
+    return pipe
 
 
-def generate_ai_image(seed, image, strength, guidance_scale, prompt):
-
+def generate_ai_image(pipe, seed, image, strength, guidance_scale, prompt):
     generator = torch.manual_seed(seed)
 
     image = pipe(prompt, image=image, strength=strength, guidance_scale=guidance_scale, generator=generator).images
@@ -52,27 +63,55 @@ def get_video_data(video_name, video_scale):
 
     return {'frames':frames, 'framerate':framerate, 'resolution':resolution, 'audio':audio}
 
+def generate_frames(pipe,base_frames, strength, guidance_scale, seed, prompt, start_frame, end_frame):
+    cur_dir = os.getcwd()
+    temp_path = f'{cur_dir}/temp'
+    if not os.path.exists(temp_path):
+        os.makedirs(temp_path)
 
+    for I in range(start_frame-1, end_frame):
+        frame = base_frames[I]
+        image = generate_ai_image(pipe,seed,frame,strength,guidance_scale,prompt)
+        torch.mps.empty_cache()
+        image.save(f'{cur_dir}/temp/{I+1}.jpg')
+        del image
+
+def generate_video(framerate, audio):
+    cur_dir = os.getcwd()
+    frames = os.listdir(f'{cur_dir}/temp')
+    frame_numbers = []
+    for frame in frames:
+        if '.jpg' in frame:
+            frame_numbers.append(int(frame.split('.')[0]))
+    frame_numbers.sort()
+
+    sorted_frames = []
+    for number in frame_numbers:
+        image = moviepy.ImageClip(f'{cur_dir}/temp/{str(number)}.jpg', duration=1/framerate)
+        print(image.duration)
+        sorted_frames.append(image)
+
+    final_video = moviepy.concatenate_videoclips(sorted_frames, method='compose')
+    final_video.audio = audio
+    final_video.write_videofile('test_output.mp4', fps=framerate)
+    print(frame_numbers)
+    print(frames)
 
 if __name__ == '__main__':
+    pipe = initialise_ai('GPU')
     strength = 0.4  # Lower values make the output less like the input image 0-1
     guidance_scale = 8  # Higher values make the output more aligned with the text prompt 1-10
     video_scale = 0.7
-    #init_image = load_image('test2.jpg').convert("RGB")
     prompt = "a hyper realistic scene"
     seed = random.randint(1, 2147483647)
 
-    #image = generate_ai_image(seed, init_image, strength, guidance_scale, prompt)
-    #image.save('ai_result.jpg')
     video_info = get_video_data('test2.mp4', video_scale)
-
+    print(len(video_info['frames']))
     start_frame = 1
     end_frame = len(video_info['frames'])
     
-    for I in range(start_frame-1, end_frame):
-        frame = video_info['frames'][I]
-        image = generate_ai_image(seed,frame,strength,guidance_scale,prompt)
-        torch.mps.empty_cache()
-        image.save('ai_result.jpg')
-        del image
+    generate_frames(pipe,video_info['frames'], strength, guidance_scale, seed, prompt, start_frame, end_frame)
+
+    generate_video(video_info['framerate'], video_info['audio'])
+
     #print(video_info['audio'])
