@@ -2,3 +2,4 @@ diffusers
 huggingface_hub
 transformers
 accelerate
+(ffmpeg is needed)
