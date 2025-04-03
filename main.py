@@ -76,8 +76,12 @@ def generate_frames(pipe,base_frames, strength, guidance_scale, seed, prompt, st
         image.save(f'{cur_dir}/temp/{I+1}.jpg')
         del image
 
-def generate_video(framerate, audio):
+def generate_video(framerate, audio, video_name):
     cur_dir = os.getcwd()
+    final_path = f'{cur_dir}/final_videos'
+    if not os.path.exists(final_path):
+        os.makedirs(final_path)
+
     frames = os.listdir(f'{cur_dir}/temp')
     frame_numbers = []
     for frame in frames:
@@ -93,7 +97,7 @@ def generate_video(framerate, audio):
 
     final_video = moviepy.concatenate_videoclips(sorted_frames, method='compose')
     final_video.audio = audio
-    final_video.write_videofile('test_output.mp4', fps=framerate)
+    final_video.write_videofile(f'{video_name}.mp4', fps=framerate)
     print(frame_numbers)
     print(frames)
 
@@ -102,7 +106,7 @@ if __name__ == '__main__':
     strength = 0.4  # Lower values make the output less like the input image 0-1
     guidance_scale = 8  # Higher values make the output more aligned with the text prompt 1-10
     video_scale = 0.7
-    prompt = "a hyper realistic scene"
+    prompt = "an underwater ocean scene"
     seed = random.randint(1, 2147483647)
 
     video_info = get_video_data('test2.mp4', video_scale)
@@ -112,6 +116,6 @@ if __name__ == '__main__':
     
     generate_frames(pipe,video_info['frames'], strength, guidance_scale, seed, prompt, start_frame, end_frame)
 
-    generate_video(video_info['framerate'], video_info['audio'])
+    generate_video(video_info['framerate'], video_info['audio'],'test_output')
 
     #print(video_info['audio'])
