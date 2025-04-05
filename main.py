@@ -1,13 +1,15 @@
-import torch
-from diffusers import StableDiffusionXLImg2ImgPipeline
-from diffusers.utils import load_image
 import random
-import cv2
-import moviepy
 import os
+import shutil
 from PIL import Image
 import math
 import sys
+
+import cv2
+import moviepy
+import torch
+from diffusers import StableDiffusionXLImg2ImgPipeline
+from diffusers.utils import load_image
 
 
 def initialise_ai(compute_device):
@@ -101,9 +103,20 @@ def generate_video(framerate, audio, video_name):
     print(frame_numbers)
     print(frames)
 
+
+def clear_temp():
+    cur_dir = os.getcwd()
+    temp_path = f'{cur_dir}/temp'
+    if not os.path.exists(temp_path):
+        os.makedirs(temp_path)
+    if os.path.exists(temp_path):
+        shutil.rmtree(temp_path)
+        os.makedirs(temp_path)
+
+
 if __name__ == '__main__':
     pipe = initialise_ai('GPU')
-    strength = 0.4  # Lower values make the output less like the input image 0-1
+    strength = 0.2  # Lower values make the output less like the input image 0-1
     guidance_scale = 8  # Higher values make the output more aligned with the text prompt 1-10
     video_scale = 0.7
     prompt = "an underwater ocean scene"

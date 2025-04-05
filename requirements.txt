@@ -3,3 +3,5 @@ huggingface_hub
 transformers
 accelerate
 (ffmpeg is needed)
+https://www.youtube.com/watch?v=-X_d2AVXVkQ
+https://huggingface.co/stabilityai/stable-diffusion-xl-refiner-1.0
