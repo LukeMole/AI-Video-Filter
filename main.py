@@ -11,7 +11,6 @@ import moviepy
 import torch
 from diffusers import StableDiffusionInstructPix2PixPipeline, EulerAncestralDiscreteScheduler
 
-from diffusers.utils import load_image
 
 
 def initialise_ai(compute_device):
@@ -32,20 +31,25 @@ def initialise_ai(compute_device):
     return pipe
 
 
-def generate_ai_image(pipe, seed, image, strength, guidance_scale, prompt):
+def generate_ai_image(pipe, seed, image, prompt):
     generator = torch.manual_seed(seed)
-    init_image = load_image('test.jpg').convert('RGB')
-    image = pipe(prompt, image=image, num_inference_steps=10, image_guidance_scale=1).images
+    image = pipe(prompt, image=image, num_inference_steps=10, image_guidance_scale=1, seed=generator).images
     return image[0]
 
-def get_video_data(video_name, video_scale):
+def get_video_data(video_name):
     #get video
+    BUFFER = 0.5
     all_frames = []
     video = cv2.VideoCapture(video_name)
     resolution = {'x':video.get(cv2.CAP_PROP_FRAME_WIDTH), 'y':video.get(cv2.CAP_PROP_FRAME_HEIGHT)}
     framerate = video.get(cv2.CAP_PROP_FPS)
     frames = []
     ret, frame = video.read()
+    
+    if resolution['x'] > resolution['y']:
+        ratio = (512 + BUFFER)/resolution['x']
+    else:
+        ratio = (512 + BUFFER)/resolution['y']
 
     #get audio
     cur_dir = os.getcwd()
@@ -55,7 +59,7 @@ def get_video_data(video_name, video_scale):
     while ret:
         # Convert the frame from BGR to RGB
         rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        resized_frame = cv2.resize(rgb_frame,(math.floor(resolution['x']*video_scale),math.floor(resolution['y']*video_scale)))
+        resized_frame = cv2.resize(rgb_frame,(math.floor(resolution['x']*ratio),math.floor(resolution['y']*ratio)))
         # Convert the NumPy array to a PIL image
         pil_image = Image.fromarray(resized_frame)
         pil_image = PIL.ImageOps.exif_transpose(pil_image)
@@ -126,14 +130,14 @@ if __name__ == '__main__':
     prompt = "how would the image looked if it took place in ancient rome?"
     seed = random.randint(1, 2147483647)
 
-    video_info = get_video_data('siege.mp4', video_scale)
+    video_info = get_video_data('test2.mp4')
     print(len(video_info['frames']))
     start_frame = 1
     end_frame = len(video_info['frames'])
     clear_temp()
     
-    generate_frames(pipe,video_info['frames'], strength, guidance_scale, seed, prompt, start_frame, end_frame)
+    generate_frames(pipe,video_info['frames'], seed, prompt, start_frame, end_frame)
 
-    generate_video(video_info['framerate'], video_info['audio'],'siege_output')
+    generate_video(video_info['framerate'], video_info['audio'],'test2_output2')
 
     #print(video_info['audio'])
