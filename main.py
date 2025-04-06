@@ -1,11 +1,11 @@
 import random
 import os
 import shutil
-from PIL import Image
-import PIL
 import math
 import sys
 
+from PIL import Image
+import PIL
 import cv2
 import moviepy
 import torch
@@ -73,7 +73,7 @@ def get_video_data(video_name):
 
     return {'frames':frames, 'framerate':framerate, 'resolution':resolution, 'audio':audio}
 
-def generate_frames(pipe,base_frames, strength, guidance_scale, seed, prompt, start_frame, end_frame):
+def generate_frames(pipe,base_frames, seed, prompt, start_frame, end_frame):
     cur_dir = os.getcwd()
     temp_path = f'{cur_dir}/temp'
     if not os.path.exists(temp_path):
@@ -81,7 +81,7 @@ def generate_frames(pipe,base_frames, strength, guidance_scale, seed, prompt, st
 
     for I in range(start_frame-1, end_frame):
         frame = base_frames[I]
-        image = generate_ai_image(pipe,seed,frame,strength,guidance_scale,prompt)
+        image = generate_ai_image(pipe,seed,frame,prompt)
         torch.mps.empty_cache()
         image.save(f'{cur_dir}/temp/{I+1}.jpg')
         del image

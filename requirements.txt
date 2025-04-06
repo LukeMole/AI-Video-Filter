@@ -2,6 +2,13 @@ diffusers
 huggingface_hub
 transformers
 accelerate
+sentencepiece
+opencv-python
+moviepy
+protobuf
 (ffmpeg is needed)
+(enable read access of all repos under your personal namespace, read accerss to contents of all public gated repos you can access)
 https://www.youtube.com/watch?v=-X_d2AVXVkQ
 https://huggingface.co/stabilityai/stable-diffusion-xl-refiner-1.0
+https://huggingface.co/black-forest-labs/FLUX.1-dev
+https://huggingface.co/timbrooks/instruct-pix2pix
