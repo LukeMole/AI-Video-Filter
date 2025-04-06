@@ -2,13 +2,15 @@ import random
 import os
 import shutil
 from PIL import Image
+import PIL
 import math
 import sys
 
 import cv2
 import moviepy
 import torch
-from diffusers import StableDiffusionXLImg2ImgPipeline
+from diffusers import StableDiffusionInstructPix2PixPipeline, EulerAncestralDiscreteScheduler
+
 from diffusers.utils import load_image
 
 
@@ -16,9 +18,8 @@ def initialise_ai(compute_device):
     OS = sys.platform
 
     model = "stabilityai/stable-diffusion-xl-refiner-1.0"
-    pipe = StableDiffusionXLImg2ImgPipeline.from_pretrained(
-    model, torch_dtype=torch.float16, variant="fp16", use_safetensors=True
-    )
+    model_id = "timbrooks/instruct-pix2pix"
+    pipe = StableDiffusionInstructPix2PixPipeline.from_pretrained(model_id, torch_dtype=torch.float16, safety_checker=None)
     if compute_device == 'GPU':
         if OS == 'darwin':
             pipe = pipe.to("mps")
@@ -26,14 +27,15 @@ def initialise_ai(compute_device):
             pipe = pipe.to("cuda")
     else:
         pipe = pipe.to('cpu')
-    
+
+    pipe.scheduler = EulerAncestralDiscreteScheduler.from_config(pipe.scheduler.config)
     return pipe
 
 
 def generate_ai_image(pipe, seed, image, strength, guidance_scale, prompt):
     generator = torch.manual_seed(seed)
-
-    image = pipe(prompt, image=image, strength=strength, guidance_scale=guidance_scale, generator=generator).images
+    init_image = load_image('test.jpg').convert('RGB')
+    image = pipe(prompt, image=image, num_inference_steps=10, image_guidance_scale=1).images
     return image[0]
 
 def get_video_data(video_name, video_scale):
@@ -56,6 +58,8 @@ def get_video_data(video_name, video_scale):
         resized_frame = cv2.resize(rgb_frame,(math.floor(resolution['x']*video_scale),math.floor(resolution['y']*video_scale)))
         # Convert the NumPy array to a PIL image
         pil_image = Image.fromarray(resized_frame)
+        pil_image = PIL.ImageOps.exif_transpose(pil_image)
+        pil_image = pil_image.convert('RGB')
 
         # Append the PIL image to the frames list
         frames.append(pil_image)
@@ -118,17 +122,18 @@ if __name__ == '__main__':
     pipe = initialise_ai('GPU')
     strength = 0.2  # Lower values make the output less like the input image 0-1
     guidance_scale = 8  # Higher values make the output more aligned with the text prompt 1-10
-    video_scale = 0.7
-    prompt = "an underwater ocean scene"
+    video_scale = 0.25
+    prompt = "how would the image looked if it took place in ancient rome?"
     seed = random.randint(1, 2147483647)
 
-    video_info = get_video_data('test2.mp4', video_scale)
+    video_info = get_video_data('siege.mp4', video_scale)
     print(len(video_info['frames']))
     start_frame = 1
     end_frame = len(video_info['frames'])
+    clear_temp()
     
     generate_frames(pipe,video_info['frames'], strength, guidance_scale, seed, prompt, start_frame, end_frame)
 
-    generate_video(video_info['framerate'], video_info['audio'],'test_output')
+    generate_video(video_info['framerate'], video_info['audio'],'siege_output')
 
     #print(video_info['audio'])
