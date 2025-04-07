@@ -3,6 +3,7 @@ import os
 import shutil
 import math
 import sys
+import numpy as np
 
 from PIL import Image
 import PIL
@@ -10,6 +11,7 @@ import cv2
 import moviepy
 import torch
 from diffusers import StableDiffusionInstructPix2PixPipeline, EulerAncestralDiscreteScheduler
+from transformers import AutoImageProcessor, Swin2SRForImageSuperResolution
 
 
 
@@ -31,9 +33,27 @@ def initialise_ai(compute_device):
     return pipe
 
 
+def initialise_upscaler():
+    upscaler_processor = AutoImageProcessor.from_pretrained("caidas/swin2SR-classical-sr-x2-64")
+    upscaler = Swin2SRForImageSuperResolution.from_pretrained("caidas/swin2SR-classical-sr-x2-64")
+
+    return {'upscaler':upscaler, 'processor':upscaler_processor}
+
+def upscale_image(image, upscaler, upscaler_processor):
+    inputs = upscaler_processor(image, return_tensors="pt")
+    with torch.no_grad():
+        outputs = upscaler(**inputs)
+    output = outputs.reconstruction.data.squeeze().float().cpu().clamp_(0, 1).numpy()
+    output = np.moveaxis(output, source=0, destination=-1)
+    output = (output * 255.0).round().astype(np.uint8) 
+
+    image = Image.fromarray(output)
+    return image
+
 def generate_ai_image(pipe, seed, image, prompt):
     generator = torch.manual_seed(seed)
     image = pipe(prompt, image=image, num_inference_steps=10, image_guidance_scale=1, seed=generator).images
+
     return image[0]
 
 def get_video_data(video_name):
@@ -73,7 +93,7 @@ def get_video_data(video_name):
 
     return {'frames':frames, 'framerate':framerate, 'resolution':resolution, 'audio':audio}
 
-def generate_frames(pipe,base_frames, seed, prompt, start_frame, end_frame):
+def generate_frames(pipe, upscaler_dict,base_frames, seed, prompt, start_frame, end_frame, upscale):
     cur_dir = os.getcwd()
     temp_path = f'{cur_dir}/temp'
     if not os.path.exists(temp_path):
@@ -82,8 +102,14 @@ def generate_frames(pipe,base_frames, seed, prompt, start_frame, end_frame):
     for I in range(start_frame-1, end_frame):
         frame = base_frames[I]
         image = generate_ai_image(pipe,seed,frame,prompt)
+        if upscale:
+            upscaled_image = upscale_image(image, upscaler_dict['upscaler'], upscaler_dict['processor'])
+            upscaled_image.save(f'{cur_dir}/temp/{I+1}.jpg')
+            del upscaled_image
+        else:
+            image.save(f'{cur_dir}/temp/{I+1}.jpg')
         torch.mps.empty_cache()
-        image.save(f'{cur_dir}/temp/{I+1}.jpg')
+        torch.cuda.empty_cache()
         del image
 
 def generate_video(framerate, audio, video_name):
@@ -124,20 +150,22 @@ def clear_temp():
 
 if __name__ == '__main__':
     pipe = initialise_ai('GPU')
+    upscaler_dict = initialise_upscaler()
+
     strength = 0.2  # Lower values make the output less like the input image 0-1
     guidance_scale = 8  # Higher values make the output more aligned with the text prompt 1-10
     video_scale = 0.25
     prompt = "how would the image looked if it took place in ancient rome?"
     seed = random.randint(1, 2147483647)
 
-    video_info = get_video_data('test2.mp4')
+    video_info = get_video_data('siege.mp4')
     print(len(video_info['frames']))
     start_frame = 1
     end_frame = len(video_info['frames'])
     clear_temp()
     
-    generate_frames(pipe,video_info['frames'], seed, prompt, start_frame, end_frame)
+    generate_frames(pipe, upscaler_dict,video_info['frames'], seed, prompt, start_frame, end_frame, upscale=True)
 
-    generate_video(video_info['framerate'], video_info['audio'],'test2_output2')
+    generate_video(video_info['framerate'], video_info['audio'],'siege_output2')
 
     #print(video_info['audio'])
