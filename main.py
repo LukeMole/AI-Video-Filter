@@ -137,7 +137,7 @@ def generate_frames(pipe, upscaler_dict,base_frames, seed, prompt, start_frame, 
             pass
         del image
         end = datetime.now()
-        time_left = math.floor((end - start).total_seconds()) * (end_frame - I)
+        time_left = math.floor((end - start).total_seconds()) * (end_frame - I+1)
         hours = math.floor(time_left/60/60)
         minutes = math.floor((time_left - (hours*60*60))/60)
         seconds = time_left - ((hours*60*60) + (minutes*60))
