@@ -4,6 +4,7 @@ import shutil
 import math
 import sys
 import numpy as np
+from datetime import datetime
 
 from PIL import Image
 import PIL
@@ -117,6 +118,7 @@ def generate_frames(pipe, upscaler_dict,base_frames, seed, prompt, start_frame, 
         os.makedirs(temp_path)
 
     for I in range(start_frame-1, end_frame):
+        start = datetime.now()
         frame = base_frames[I]
         image = generate_ai_image(pipe,seed,frame,prompt)
         if upscale:
@@ -134,6 +136,21 @@ def generate_frames(pipe, upscaler_dict,base_frames, seed, prompt, start_frame, 
         except:
             pass
         del image
+        end = datetime.now()
+        time_left = math.floor((end - start).total_seconds()) * (end_frame - I)
+        hours = math.floor(time_left/60/60)
+        minutes = math.floor((time_left - (hours*60*60))/60)
+        seconds = time_left - ((hours*60*60) + (minutes*60))
+        if hours < 10:
+            hours = '0' + str(hours)
+        
+        if minutes < 10:
+            minutes = '0' + str(minutes)
+        
+        if seconds < 10:
+            minutes = '0' + str(minutes)
+        time_remaining = f'{hours}:{minutes}:{seconds}'
+        print(f'Time Remaining -> {time_remaining}')
 
 def generate_video(framerate, audio, video_name):
     cur_dir = os.getcwd()
