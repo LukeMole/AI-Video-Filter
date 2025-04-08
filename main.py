@@ -196,7 +196,7 @@ if __name__ == '__main__':
     strength = 0.2  # Lower values make the output less like the input image 0-1
     guidance_scale = 8  # Higher values make the output more aligned with the text prompt 1-10
     video_scale = 0.25
-    prompt = "how would the image looked if it was hyper realistic?"
+    prompt = "how would the image looked if it took place in ancient rome?"
     seed = random.randint(1, 2147483647)
 
     video_info = get_video_data('siege.mp4')
@@ -207,6 +207,6 @@ if __name__ == '__main__':
     
     generate_frames(pipe, upscaler_dict,video_info['frames'], seed, prompt, start_frame, end_frame, upscale=True, compute_device=compute_device)
 
-    generate_video(video_info['framerate'], video_info['audio'],'siege_output2')
+    generate_video(video_info['framerate'], video_info['audio'],'siege_output10_no_upscale')
 
     #print(video_info['audio'])
