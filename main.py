@@ -33,14 +33,31 @@ def initialise_ai(compute_device):
     return pipe
 
 
-def initialise_upscaler():
-    upscaler_processor = AutoImageProcessor.from_pretrained("caidas/swin2SR-classical-sr-x2-64")
-    upscaler = Swin2SRForImageSuperResolution.from_pretrained("caidas/swin2SR-classical-sr-x2-64")
+def initialise_upscaler(compute_device):
+    OS = sys.platform
+    upscaler_processor = AutoImageProcessor.from_pretrained("caidas/swin2SR-classical-sr-x4-64")
+    upscaler = Swin2SRForImageSuperResolution.from_pretrained("caidas/swin2SR-classical-sr-x4-64")
+
+    if compute_device == 'GPU':
+        if OS == 'darwin':
+            upscaler = upscaler.to("mps")
+        else:
+            upscaler = upscaler.to("cuda")
+    else:
+        upscaler = upscaler.to('cpu')
 
     return {'upscaler':upscaler, 'processor':upscaler_processor}
 
-def upscale_image(image, upscaler, upscaler_processor):
+def upscale_image(image, upscaler, upscaler_processor, compute_device):
+    OS = sys.platform
+
     inputs = upscaler_processor(image, return_tensors="pt")
+    if compute_device == 'GPU':
+        if OS == 'darwin':
+            inputs = {k: v.to('mps') for k, v in inputs.items()}
+        else:
+            inputs = {k: v.to('cuda') for k, v in inputs.items()}
+
     with torch.no_grad():
         outputs = upscaler(**inputs)
     output = outputs.reconstruction.data.squeeze().float().cpu().clamp_(0, 1).numpy()
@@ -93,7 +110,7 @@ def get_video_data(video_name):
 
     return {'frames':frames, 'framerate':framerate, 'resolution':resolution, 'audio':audio}
 
-def generate_frames(pipe, upscaler_dict,base_frames, seed, prompt, start_frame, end_frame, upscale):
+def generate_frames(pipe, upscaler_dict,base_frames, seed, prompt, start_frame, end_frame, upscale, compute_device):
     cur_dir = os.getcwd()
     temp_path = f'{cur_dir}/temp'
     if not os.path.exists(temp_path):
@@ -103,13 +120,19 @@ def generate_frames(pipe, upscaler_dict,base_frames, seed, prompt, start_frame, 
         frame = base_frames[I]
         image = generate_ai_image(pipe,seed,frame,prompt)
         if upscale:
-            upscaled_image = upscale_image(image, upscaler_dict['upscaler'], upscaler_dict['processor'])
+            upscaled_image = upscale_image(image, upscaler_dict['upscaler'], upscaler_dict['processor'], compute_device=compute_device)
             upscaled_image.save(f'{cur_dir}/temp/{I+1}.jpg')
             del upscaled_image
         else:
             image.save(f'{cur_dir}/temp/{I+1}.jpg')
-        torch.mps.empty_cache()
-        torch.cuda.empty_cache()
+        try:
+            torch.mps.empty_cache()
+        except:
+            pass
+        try:
+            torch.cuda.empty_cache()
+        except:
+            pass
         del image
 
 def generate_video(framerate, audio, video_name):
@@ -150,7 +173,7 @@ def clear_temp():
 
 if __name__ == '__main__':
     pipe = initialise_ai('GPU')
-    upscaler_dict = initialise_upscaler()
+    upscaler_dict = initialise_upscaler('GPU')
 
     strength = 0.2  # Lower values make the output less like the input image 0-1
     guidance_scale = 8  # Higher values make the output more aligned with the text prompt 1-10
@@ -164,7 +187,7 @@ if __name__ == '__main__':
     end_frame = len(video_info['frames'])
     clear_temp()
     
-    generate_frames(pipe, upscaler_dict,video_info['frames'], seed, prompt, start_frame, end_frame, upscale=True)
+    generate_frames(pipe, upscaler_dict,video_info['frames'], seed, prompt, start_frame, end_frame, upscale=True, compute_device='GPU')
 
     generate_video(video_info['framerate'], video_info['audio'],'siege_output2')
 

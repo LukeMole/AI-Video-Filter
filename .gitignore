@@ -2,3 +2,4 @@
 *.crdownload
 *.mp4
 /temp
+*.whl
