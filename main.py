@@ -172,8 +172,9 @@ def clear_temp():
 
 
 if __name__ == '__main__':
-    pipe = initialise_ai('GPU')
-    upscaler_dict = initialise_upscaler('GPU')
+    compute_device = 'GPU'  # Change to 'CPU' if you want to run on CPU
+    pipe = initialise_ai(compute_device)
+    upscaler_dict = initialise_upscaler(compute_device)
 
     strength = 0.2  # Lower values make the output less like the input image 0-1
     guidance_scale = 8  # Higher values make the output more aligned with the text prompt 1-10
@@ -187,7 +188,7 @@ if __name__ == '__main__':
     end_frame = len(video_info['frames'])
     clear_temp()
     
-    generate_frames(pipe, upscaler_dict,video_info['frames'], seed, prompt, start_frame, end_frame, upscale=True, compute_device='GPU')
+    generate_frames(pipe, upscaler_dict,video_info['frames'], seed, prompt, start_frame, end_frame, upscale=True, compute_device=compute_device)
 
     generate_video(video_info['framerate'], video_info['audio'],'siege_output2')
 
