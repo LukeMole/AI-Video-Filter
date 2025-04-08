@@ -74,7 +74,7 @@ def generate_ai_image(pipe, seed, image, prompt):
 
     return image[0]
 
-def get_video_data(video_name):
+def get_video_data(video_name, half_fps=False):
     #get video
     BUFFER = 0.5
     all_frames = []
@@ -94,6 +94,7 @@ def get_video_data(video_name):
     audio = moviepy.VideoFileClip(f'{cur_dir}/{video_name}').audio
     #goes through every frame and changes its color, resizes it and appends it to the frames list
     # Process each frame
+    second_frame = False
     while ret:
         # Convert the frame from BGR to RGB
         rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
@@ -104,10 +105,19 @@ def get_video_data(video_name):
         pil_image = pil_image.convert('RGB')
 
         # Append the PIL image to the frames list
-        frames.append(pil_image)
+        if half_fps:
+            if second_frame:
+                frames.append(pil_image)
+                second_frame = False
+            else:
+                second_frame = True
+        else:
+            frames.append(pil_image)
 
         # Read the next frame
         ret, frame = video.read()
+    if half_fps:
+        framerate = math.floor(framerate/2)
 
     return {'frames':frames, 'framerate':framerate, 'resolution':resolution, 'audio':audio}
 
@@ -168,7 +178,6 @@ def generate_video(framerate, audio, video_name):
     sorted_frames = []
     for number in frame_numbers:
         image = moviepy.ImageClip(f'{cur_dir}/temp/{str(number)}.jpg', duration=1/framerate)
-        print(image.duration)
         sorted_frames.append(image)
 
     final_video = moviepy.concatenate_videoclips(sorted_frames, method='compose')
@@ -199,7 +208,7 @@ if __name__ == '__main__':
     prompt = "how would the image looked if it took place in ancient rome?"
     seed = random.randint(1, 2147483647)
 
-    video_info = get_video_data('siege.mp4')
+    video_info = get_video_data('siege.mp4', half_fps=True)
     print(len(video_info['frames']))
     start_frame = 1
     end_frame = len(video_info['frames'])
