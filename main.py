@@ -148,7 +148,7 @@ def generate_frames(pipe, upscaler_dict,base_frames, seed, prompt, start_frame, 
             minutes = '0' + str(minutes)
         
         if seconds < 10:
-            minutes = '0' + str(minutes)
+            seconds = '0' + str(seconds)
         time_remaining = f'{hours}:{minutes}:{seconds}'
         print(f'Time Remaining -> {time_remaining}')
 
@@ -196,7 +196,7 @@ if __name__ == '__main__':
     strength = 0.2  # Lower values make the output less like the input image 0-1
     guidance_scale = 8  # Higher values make the output more aligned with the text prompt 1-10
     video_scale = 0.25
-    prompt = "how would the image looked if it took place in ancient rome?"
+    prompt = "how would the image looked if it was hyper realistic?"
     seed = random.randint(1, 2147483647)
 
     video_info = get_video_data('siege.mp4')
