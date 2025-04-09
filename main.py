@@ -70,7 +70,7 @@ def upscale_image(image, upscaler, upscaler_processor, compute_device):
 
 def generate_ai_image(pipe, seed, image, prompt):
     generator = torch.manual_seed(seed)
-    image = pipe(prompt, image=image, num_inference_steps=10, image_guidance_scale=1, seed=generator).images
+    image = pipe(prompt, image=image, num_inference_steps=10, image_guidance_scale=1, generator=generator).images
 
     return image[0]
 
@@ -208,7 +208,7 @@ if __name__ == '__main__':
     prompt = "how would the image looked if it took place in ancient rome?"
     seed = random.randint(1, 2147483647)
 
-    video_info = get_video_data('siege.mp4', half_fps=True)
+    video_info = get_video_data('woman_dancing.mp4', half_fps=True)
     print(len(video_info['frames']))
     start_frame = 1
     end_frame = len(video_info['frames'])
@@ -216,6 +216,6 @@ if __name__ == '__main__':
     
     generate_frames(pipe, upscaler_dict,video_info['frames'], seed, prompt, start_frame, end_frame, upscale=True, compute_device=compute_device)
 
-    generate_video(video_info['framerate'], video_info['audio'],'siege_output10_no_upscale')
+    generate_video(video_info['framerate'], video_info['audio'],'woman_dancing_10_256px')
 
     #print(video_info['audio'])
