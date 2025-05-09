@@ -205,10 +205,11 @@ if __name__ == '__main__':
     strength = 0.2  # Lower values make the output less like the input image 0-1
     guidance_scale = 8  # Higher values make the output more aligned with the text prompt 1-10
     video_scale = 0.25
-    prompt = "how would the image looked if it took place in ancient rome?"
+    prompt = "what if it looked like a watercolor painting?"
+    prompt = "what if it looked like a still from an anime?"
     seed = random.randint(1, 2147483647)
 
-    video_info = get_video_data('woman_dancing.mp4', half_fps=True)
+    video_info = get_video_data('genetic.mp4', half_fps=True)
     print(len(video_info['frames']))
     start_frame = 1
     end_frame = len(video_info['frames'])
@@ -216,6 +217,6 @@ if __name__ == '__main__':
     
     generate_frames(pipe, upscaler_dict,video_info['frames'], seed, prompt, start_frame, end_frame, upscale=True, compute_device=compute_device)
 
-    generate_video(video_info['framerate'], video_info['audio'],'woman_dancing_10_256px')
+    generate_video(video_info['framerate'], video_info['audio'],'genetic_watercolor')
 
     #print(video_info['audio'])
