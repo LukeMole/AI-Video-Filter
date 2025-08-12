@@ -6,6 +6,7 @@ sentencepiece
 opencv-python
 moviepy
 protobuf
+pip install git+https://github.com/huggingface/diffusers.git
 (ffmpeg is needed)
 (install pytorch)
 (login with hugging face token)

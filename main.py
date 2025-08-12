@@ -13,25 +13,41 @@ import moviepy
 import torch
 from diffusers import StableDiffusionInstructPix2PixPipeline, EulerAncestralDiscreteScheduler
 from transformers import AutoImageProcessor, Swin2SRForImageSuperResolution
+from diffusers import DiffusionPipeline
 
 
-
-def initialise_ai(compute_device):
+def initialise_ai(compute_device, turbo=False):
     OS = sys.platform
 
-    model = "stabilityai/stable-diffusion-xl-refiner-1.0"
-    model_id = "timbrooks/instruct-pix2pix"
-    pipe = StableDiffusionInstructPix2PixPipeline.from_pretrained(model_id, torch_dtype=torch.float16, safety_checker=None)
-    if compute_device == 'GPU':
-        if OS == 'darwin':
-            pipe = pipe.to("mps")
+    if turbo==False:
+        model = "stabilityai/stable-diffusion-xl-base-1.0"
+        model = "stabilityai/stable-diffusion-xl-refiner-1.0"
+        model_id = "timbrooks/instruct-pix2pix"
+        pipe = StableDiffusionInstructPix2PixPipeline.from_pretrained(model_id, torch_dtype=torch.float16, safety_checker=None)
+        if compute_device == 'GPU':
+            if OS == 'darwin':
+                pipe = pipe.to("mps")
+            else:
+                pipe = pipe.to("cuda")
         else:
-            pipe = pipe.to("cuda")
-    else:
-        pipe = pipe.to('cpu')
+            pipe = pipe.to('cpu')
 
-    pipe.scheduler = EulerAncestralDiscreteScheduler.from_config(pipe.scheduler.config)
-    return pipe
+        pipe.scheduler = EulerAncestralDiscreteScheduler.from_config(pipe.scheduler.config)
+        return pipe
+    else:
+        model_id = 'sanaka87/ICEdit-MoE-LoRA'
+        pipe = DiffusionPipeline.from_pretrained("black-forest-labs/FLUX.1-Kontext-dev")
+        if compute_device == 'GPU':
+            if OS == 'darwin':
+                pipe = pipe.to("mps")
+            else:
+                pipe.enable_model_cpu_offload()
+                #pipe = pipe.to("cuda")
+        else:
+            pipe = pipe.to('cpu')
+
+        return pipe
+
 
 
 def initialise_upscaler(compute_device):
@@ -71,7 +87,7 @@ def upscale_image(image, upscaler, upscaler_processor, compute_device):
 def generate_ai_image(pipe, seed, image, prompt):
     generator = torch.manual_seed(seed)
     image = pipe(prompt, image=image, num_inference_steps=10, image_guidance_scale=1, generator=generator).images
-
+    #image = pipe(image=image, prompt=prompt, generator=generator)
     return image[0]
 
 def get_video_data(video_name, half_fps=False):
@@ -199,7 +215,7 @@ def clear_temp():
 
 if __name__ == '__main__':
     compute_device = 'GPU'  # Change to 'CPU' if you want to run on CPU
-    pipe = initialise_ai(compute_device)
+    pipe = initialise_ai(compute_device, False)
     upscaler_dict = initialise_upscaler(compute_device)
 
     strength = 0.2  # Lower values make the output less like the input image 0-1
