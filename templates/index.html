@@ -11,7 +11,7 @@
 </head>
 <body>
     <div class="left">
-        <div class="checkbox-container">
+        <div class="checkbox-container first-checkbox">
             <input type="checkbox" id="clearFrameCache" name="clearFrameCache">
             <label for="clearFrameCache">Clear frame cache</label>
         </div>
@@ -20,7 +20,7 @@
             <label for="halveVideoFps">Halve video FPS</label>
         </div>        
 
-        <button id="importVideoFile">Import video from file</button>
+        <button class="video-import" id="importVideoFile">Import video from file</button>
 
         <hr>
     </div>
@@ -28,34 +28,36 @@
         <h1>AI Generated Frame</h1>
     </div>
     <div class="right">
-        <h2>Prompt:</h2>
-        <textarea name="prompt" rows="5", required></textarea>
-
-        <h3>Seed value:</h3>
-        <input type="number">
-        <div>
-            <div>
-                <input type="number">
-                <h3>Start frame</h3>
-            </div>
-            <hr>
-            <div>
-                <input type="number">
-                <h3>End frame</h3>
+        <div class="control-panel">
+            <h2>Prompt:</h2>
+            <textarea class="prompt" name="prompt" rows="5", required ></textarea>
+    
+            <h3 class="seed-heading">Seed value:</h3>
+            <input class="seed-number" type="number">
+            <div class="frame-select">
+                <div>
+                    <input class="frame" type="number">
+                    <h3 class="frame-heading">Start frame</h3>
+                </div>
+                <hr class="frame-divider">
+                <div>
+                    <input class="frame" type="number">
+                    <h3 class="frame-heading">End frame</h3>
+                </div>
             </div>
         </div>
 
-        <div class="checkbox-container">
+        <div class="checkbox-container-right">
             <input type="checkbox" id="turbo" name="turbo">
             <label for="turbo">Turbo</label>
         </div>
-        <button>Render Frames</button>
+        <button class="right-button">Render Frames</button>
         <hr>
-        <div class="checkbox-container">
+        <div class="checkbox-container-right">
             <input type="checkbox" id="includeSourceAudio" name="includeSourceAudio">
             <label for="includeSourceAudio">Include source audio</label>
         </div>
-        <button>Compile Frames</button>
+        <button class="right-button">Compile Frames</button>
     </div>
 </body>
 </html>

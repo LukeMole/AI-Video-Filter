@@ -68,16 +68,109 @@ label {
     margin: 5px 0;
 }
 
+.first-checkbox{
+    margin-top: 10px;
+}
+
+.checkbox-container-right{
+    display: flex;
+    align-items: center;
+    flex-direction: row;
+    margin: 5px 0;
+}
+
 .left, .center, .right {
     display: flex;
     justify-content: center;
     align-items: start;
     flex-direction: column;
     border-radius: 20px;
+    background-color: #313131;
+    margin: 10px 10px
 }
 
 .left {
-    background-color: #313131;
-    padding-top: 20px;
+    padding-top: 10px;
+    justify-content: start;
+
 }
 
+.center {
+    min-width: 522px;
+    min-height: 522px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #BABABA;
+}
+
+.control-panel {
+    margin-left: 10px;
+    margin-right: 10px;
+}
+
+.prompt {
+    min-width: 230px;
+    resize: none;
+}
+
+.seed-number {
+    min-width: 230px;
+}
+
+.frame-select{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.frame {
+    max-width: 70px;
+    margin-top: 15px;
+}
+
+.frame-heading{
+    display: flex;
+    justify-content: center;
+    align-self: center;
+    font-size: small;
+    margin-top: 2px;
+}
+
+.left, .right {
+    min-width: 270px;
+    min-height: 512px;
+}
+
+.right {
+    padding-bottom: 10px;
+}
+
+input[type="number"], textarea{
+    border-radius: 15px;
+    font-size: large;
+    border: none;
+    box-shadow: inset 2px 2px 10px 1px #252525;
+    background-color: #646464;
+    color: #FFFFFF;
+    padding: 5px 10px;
+}
+
+.seed-heading{
+    margin-bottom: 0px;
+    font-size: medium;
+}
+
+.frame-divider {
+    margin-top: -5px;
+    margin-left: 10px;
+    margin-right: 10px;
+}
+
+.right-button{
+    min-width: 250px;
+}
+
+.video-import{
+    min-width: 250px;
+}
