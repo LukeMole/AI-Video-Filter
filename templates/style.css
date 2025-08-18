@@ -175,3 +175,9 @@ input[type="number"], textarea{
 .video-import{
     min-width: 250px;
 }
+
+.metadata{
+    font-weight: 500;
+    margin: 3px 10px;
+    font-size: small;
+}
