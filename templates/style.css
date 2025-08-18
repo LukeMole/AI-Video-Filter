@@ -6,6 +6,7 @@ body {
     flex-direction: row;
     font-family: "Roboto", sans-serif;
     color: #FFFFFF;
+    min-height: 90vh;
 }
 
 input[type="checkbox"] {
