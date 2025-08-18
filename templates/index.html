@@ -3,17 +3,59 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
     <title>AI Filter</title>
 </head>
 <body>
     <div class="left">
+        <div class="checkbox-container">
+            <input type="checkbox" id="clearFrameCache" name="clearFrameCache">
+            <label for="clearFrameCache">Clear frame cache</label>
+        </div>
+        <div class="checkbox-container">
+            <input type="checkbox" id="halveVideoFps" name="halveVideoFps">
+            <label for="halveVideoFps">Halve video FPS</label>
+        </div>        
 
+        <button id="importVideoFile">Import video from file</button>
+
+        <hr>
     </div>
     <div class="center">
-
+        <h1>AI Generated Frame</h1>
     </div>
     <div class="right">
-        
+        <h2>Prompt:</h2>
+        <textarea name="prompt" rows="5", required></textarea>
+
+        <h3>Seed value:</h3>
+        <input type="number">
+        <div>
+            <div>
+                <input type="number">
+                <h3>Start frame</h3>
+            </div>
+            <hr>
+            <div>
+                <input type="number">
+                <h3>End frame</h3>
+            </div>
+        </div>
+
+        <div class="checkbox-container">
+            <input type="checkbox" id="turbo" name="turbo">
+            <label for="turbo">Turbo</label>
+        </div>
+        <button>Render Frames</button>
+        <hr>
+        <div class="checkbox-container">
+            <input type="checkbox" id="includeSourceAudio" name="includeSourceAudio">
+            <label for="includeSourceAudio">Include source audio</label>
+        </div>
+        <button>Compile Frames</button>
     </div>
 </body>
 </html>

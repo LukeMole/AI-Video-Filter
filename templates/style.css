@@ -1,0 +1,83 @@
+body {
+    background-color: #1C1C1C;
+    display: flex;
+    justify-content: center;
+    align-items:center;
+    flex-direction: row;
+    font-family: "Roboto", sans-serif;
+    color: #FFFFFF;
+}
+
+input[type="checkbox"] {
+    accent-color: #646464;
+    color: #646464;
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    border: 2px solid #646464;
+    border-radius: 5px;
+    background-color: transparent;
+    cursor: pointer;
+    position: relative;
+    margin-left: 10px;
+}
+
+input[type="checkbox"]:checked {
+    background-color: #646464;
+    border-color: #646464;
+}
+
+input[type="checkbox"]:checked::after {
+    content: '✓';
+    position: absolute;
+    left: 2px;
+    top: -2px;
+    color: white;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+button{
+    color: #FFFFFF;
+    background-color: #646464;
+    border: none;
+    border-radius: 15px;
+    font-size: large;
+    font-weight: 600;
+    padding: 7px 20px;
+    margin: 10px 10px;
+}
+
+hr{
+    width: 90%;
+    background-color: #646464;
+    height: 2px;
+    border: none;
+}
+
+label {
+    font-weight: 500;
+    margin-left: 8px;
+}
+
+/* Style for checkbox-label container divs */
+.checkbox-container{
+    display: flex;
+    align-items: center;
+    flex-direction: row;
+    margin: 5px 0;
+}
+
+.left, .center, .right {
+    display: flex;
+    justify-content: center;
+    align-items: start;
+    flex-direction: column;
+    border-radius: 20px;
+}
+
+.left {
+    background-color: #313131;
+    padding-top: 20px;
+}
+
