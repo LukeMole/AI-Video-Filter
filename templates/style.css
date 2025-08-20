@@ -215,3 +215,29 @@ input[type="number"], textarea{
     background-color: inherit;
     transform: scale(115%);
 }
+
+@media screen and (max-width: 913px) {
+    body{
+        flex-direction: column;
+    }
+
+    .center{
+        min-width: 90vw;
+    }
+
+    .left, .right, .center{
+        width: 90vw;
+    }
+
+    .mobile-button{
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-width: 100%;
+    }
+
+    .right{
+        align-items: center;
+    }
+
+}
