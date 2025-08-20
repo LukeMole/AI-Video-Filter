@@ -47,6 +47,16 @@ button{
     font-weight: 600;
     padding: 7px 20px;
     margin: 10px 10px;
+    transition: background-color 0.3s ease;
+}
+
+button:hover{
+    background-color: #4f4f4f;
+}
+
+button:active{
+    color: #f2f2f2;
+    background-color: #3f3f3f; 
 }
 
 hr{
@@ -181,3 +191,4 @@ input[type="number"], textarea{
     margin: 3px 10px;
     font-size: small;
 }
+
