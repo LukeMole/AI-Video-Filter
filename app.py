@@ -18,9 +18,7 @@ def process_video(filename):
     clear_frame_cache_val = request.form.get('clearFrameCache')
     halve_fps = request.form.get('halveFps')
     if clear_frame_cache_val == 'on':
-        print('cleared frame cache')
-    else:
-        print('frame cache not cleared')
+        main.clear_temp()
 
     half_fps = False
     if halve_fps == 'on':
