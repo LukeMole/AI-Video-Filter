@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
@@ -22,15 +22,16 @@
 
         <div class="mobile-button">
             <button class="video-import" id="importVideoFile">Import video from file</button>
+            <input type="file" id="videoFileInput" accept="video/*" style="display: none;">
         </div>
 
         <hr>
 
-        <p class="metadata">Total frames:</p>
-        <p class="metadata">Source framerate</p>
-        <p class="metadata">Final framerate:</p>
-        <p class="metadata">Source resolution:</p>
-        <p class="metadata">Final resolution:</p>
+        <p class="metadata" id="sourceName">Source name:</p>
+        <p class="metadata" id="totalFrames">Total frames:</p>
+        <p class="metadata" id="finalFramerate">Final framerate:</p>
+        <p class="metadata" id="sourceResolution">Source resolution:</p>
+        <p class="metadata" id="finalResolution">Final resolution:</p>
 
         <hr>
 
@@ -42,13 +43,13 @@
     </div>
     <div class="right">
         <div class="control-panel">
-            <h2>Prompt:</h2>
+            <h2 class="prompt-heading">Prompt:</h2>
             <textarea class="prompt" name="prompt" rows="5", required ></textarea>
     
             <h3 class="seed-heading">Seed value:</h3>
             <div class="seed-container">
                 <input class="seed-number" type="number">
-                <button class="refresh-button"><img class="refresh-arrow" src="refreshArrow.png"></button>
+                <button class="refresh-button"><img class="refresh-arrow" src="{{ url_for('static', filename='refreshArrow.png') }}"></button>
             </div>
             <div class="frame-select">
                 <div>
@@ -75,5 +76,53 @@
         </div>
         <button class="right-button">Compile Frames</button>
     </div>
+
+<script>
+    document.getElementById('importVideoFile').addEventListener('click', function() {
+        document.getElementById('videoFileInput').click();
+    });
+
+    document.getElementById('videoFileInput').addEventListener('change', function(event) {
+        const file = event.target.files[0];
+        if(!file) return;
+
+        const formData = new FormData();
+        formData.append('video', file);
+
+        const clearFrameCache = document.getElementById('clearFrameCache').checked;
+        formData.append('clearFrameCache', clearFrameCache ? 'on':'off');
+
+        const halveFps = document.getElementById('halveVideoFps').checked;
+        formData.append('halveFps', halveFps ? 'on':'off');
+
+        const uploadButton = document.getElementById('importVideoFile');
+        uploadButton.textContent = 'Importing...'
+        fetch('/upload_video', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            uploadButton.textContent = 'Video imported';
+            document.getElementById('sourceName').textContent = 'Source name: ' + data.filename;
+            document.getElementById('totalFrames').textContent = 'Total frames: ' + data.frames;
+            document.getElementById('finalFramerate').textContent = 'Final framerate: ' + data.framerate + ' fps'
+            document.getElementById('sourceResolution').textContent = 'Source resolution: ' + data.base_resolution_x + ' x ' + data.base_resolution_y;
+            document.getElementById('finalResolution').textContent = 'Final resolution: ' + data.final_resolution_x + ' x ' + data.final_resolution_y;
+
+        })
+        .catch(error => {
+            uploadButton.textContent = 'Import error'
+        })
+        .finally(() => {
+                // Clear the file input value so the same file can be selected again
+                event.target.value = '';
+                
+                const timeoutId = setTimeout(() => {
+                    uploadButton.textContent = 'Import video from file';
+                }, 2000);
+            });
+    })
+</script>
 </body>
 </html>

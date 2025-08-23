@@ -94,7 +94,7 @@ def get_video_data(video_name, half_fps=False):
     #get video
     BUFFER = 0.5
     all_frames = []
-    video = cv2.VideoCapture(video_name)
+    video = cv2.VideoCapture('uploads/'+video_name)
     resolution = {'x':video.get(cv2.CAP_PROP_FRAME_WIDTH), 'y':video.get(cv2.CAP_PROP_FRAME_HEIGHT)}
     framerate = video.get(cv2.CAP_PROP_FPS)
     frames = []
@@ -135,7 +135,8 @@ def get_video_data(video_name, half_fps=False):
     if half_fps:
         framerate = math.floor(framerate/2)
 
-    return {'frames':frames, 'framerate':framerate, 'resolution':resolution, 'audio':audio}
+    return {'frames':frames, 'framerate':framerate, 'resolution':resolution, 'audio':audio, 
+            'final_resolution':{'x':len(resized_frame[0])*4, 'y':len(resized_frame)*4}}
 
 def generate_frames(pipe, upscaler_dict,base_frames, seed, prompt, start_frame, end_frame, upscale, compute_device):
     cur_dir = os.getcwd()

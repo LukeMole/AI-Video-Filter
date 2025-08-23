@@ -216,6 +216,10 @@ input[type="number"], textarea{
     transform: scale(115%);
 }
 
+.prompt-heading{
+    margin-bottom: 3px;
+}
+
 @media screen and (max-width: 1024px) {
     body{
         flex-direction: column;
