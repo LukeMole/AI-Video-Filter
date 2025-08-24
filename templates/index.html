@@ -53,12 +53,12 @@
             </div>
             <div class="frame-select">
                 <div>
-                    <input class="frame" type="number">
+                    <input class="frame" type="number" id="startFrame">
                     <h3 class="frame-heading">Start frame</h3>
                 </div>
                 <hr class="frame-divider">
                 <div>
-                    <input class="frame" type="number">
+                    <input class="frame" type="number" id="endFrame">
                     <h3 class="frame-heading">End frame</h3>
                 </div>
             </div>
@@ -109,7 +109,9 @@
             document.getElementById('finalFramerate').textContent = 'Final framerate: ' + data.framerate + ' fps'
             document.getElementById('sourceResolution').textContent = 'Source resolution: ' + data.base_resolution_x + ' x ' + data.base_resolution_y;
             document.getElementById('finalResolution').textContent = 'Final resolution: ' + data.final_resolution_x + ' x ' + data.final_resolution_y;
-
+            document.getElementById('startFrame').value = 1;
+            document.getElementById('endFrame').value = data.frames;
+            document.getElementById('endFrame').max = data.frames;
         })
         .catch(error => {
             uploadButton.textContent = 'Import error'

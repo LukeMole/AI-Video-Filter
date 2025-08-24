@@ -2,6 +2,7 @@ from flask import Flask, render_template, jsonify
 from flask import Flask, flash, request, redirect, url_for
 from werkzeug.utils import secure_filename
 import os, shutil
+import math
 
 import main
 
@@ -31,6 +32,13 @@ def process_video(filename):
 
 
 app = Flask(__name__)
+
+
+
+@app.route('/')
+def index():
+    return render_template('index.html')
+
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 @app.route('/upload_video', methods=['GET', 'POST'])
 def upload_video():
@@ -46,16 +54,10 @@ def upload_video():
     file.save(save_path)
     video_data = process_video(file.filename)
     return jsonify({'success': True, 'filename': file.filename, 
-                    'frames':len(video_data['frames']), 'framerate': video_data['framerate'],
+                    'frames':len(video_data['frames']), 'framerate': math.floor(video_data['framerate']),
                     'base_resolution_x':video_data['resolution']['x'], 'base_resolution_y':video_data['resolution']['y'],
                     'final_resolution_x' : video_data['final_resolution']['x'], 'final_resolution_y': video_data['final_resolution']['y']})
 
-
-
-
-@app.route('/')
-def index():
-    return render_template('index.html')
 
 if __name__ == "__main__":
     app.run(debug=True, port=8000)
