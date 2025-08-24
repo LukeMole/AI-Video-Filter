@@ -267,3 +267,10 @@ input[type="number"], textarea{
     font-weight: bold;
     color: #ffffff;
 }
+
+.aiGeneratedImage {
+    max-height: 500px;
+    width:  auto;
+    align-items: center;
+    justify-content: center;
+}

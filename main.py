@@ -140,7 +140,7 @@ def get_video_data(video_name, half_fps=False):
 
 def generate_frames(pipe, upscaler_dict,base_frames, seed, prompt, start_frame, end_frame, upscale, compute_device):
     cur_dir = os.getcwd()
-    temp_path = f'{cur_dir}/temp'
+    temp_path = f'{cur_dir}/static/temp'
     if not os.path.exists(temp_path):
         os.makedirs(temp_path)
 
@@ -150,10 +150,10 @@ def generate_frames(pipe, upscaler_dict,base_frames, seed, prompt, start_frame, 
         image = generate_ai_image(pipe,seed,frame,prompt)
         if upscale:
             upscaled_image = upscale_image(image, upscaler_dict['upscaler'], upscaler_dict['processor'], compute_device=compute_device)
-            upscaled_image.save(f'{cur_dir}/temp/{I+1}.jpg')
+            upscaled_image.save(f'{cur_dir}/static/temp/{I+1}.jpg')
             del upscaled_image
         else:
-            image.save(f'{cur_dir}/temp/{I+1}.jpg')
+            image.save(f'{cur_dir}/static/temp/{I+1}.jpg')
         try:
             torch.mps.empty_cache()
         except:
@@ -182,7 +182,7 @@ def generate_frames(pipe, upscaler_dict,base_frames, seed, prompt, start_frame, 
 
 def generate_frame(pipe, upscaler_dict,base_frames, seed, prompt, frame_index, upscale, compute_device):
     cur_dir = os.getcwd()
-    temp_path = f'{cur_dir}/temp'
+    temp_path = f'{cur_dir}/static/temp'
     if not os.path.exists(temp_path):
         os.makedirs(temp_path)
 
@@ -190,10 +190,10 @@ def generate_frame(pipe, upscaler_dict,base_frames, seed, prompt, frame_index, u
     image = generate_ai_image(pipe,seed,frame,prompt)
     if upscale:
         upscaled_image = upscale_image(image, upscaler_dict['upscaler'], upscaler_dict['processor'], compute_device=compute_device)
-        upscaled_image.save(f'{cur_dir}/temp/{frame_index+1}.jpg')
+        upscaled_image.save(f'{cur_dir}/static/temp/{frame_index+1}.jpg')
         del upscaled_image
     else:
-        image.save(f'{cur_dir}/temp/{I+1}.jpg')
+        image.save(f'{cur_dir}/static/temp/{I+1}.jpg')
     try:
         torch.mps.empty_cache()
     except:
@@ -211,7 +211,7 @@ def generate_video(framerate, audio, video_name):
     if not os.path.exists(final_path):
         os.makedirs(final_path)
 
-    frames = os.listdir(f'{cur_dir}/temp')
+    frames = os.listdir(f'{cur_dir}/static/temp')
     frame_numbers = []
     for frame in frames:
         if '.jpg' in frame:
@@ -220,7 +220,7 @@ def generate_video(framerate, audio, video_name):
 
     sorted_frames = []
     for number in frame_numbers:
-        image = moviepy.ImageClip(f'{cur_dir}/temp/{str(number)}.jpg', duration=1/framerate)
+        image = moviepy.ImageClip(f'{cur_dir}/static/temp/{str(number)}.jpg', duration=1/framerate)
         sorted_frames.append(image)
 
     final_video = moviepy.concatenate_videoclips(sorted_frames, method='compose')
@@ -232,7 +232,7 @@ def generate_video(framerate, audio, video_name):
 
 def clear_temp():
     cur_dir = os.getcwd()
-    temp_path = f'{cur_dir}/temp'
+    temp_path = f'{cur_dir}/static/temp'
     if not os.path.exists(temp_path):
         os.makedirs(temp_path)
     if os.path.exists(temp_path):

@@ -40,7 +40,8 @@
         <p class="metadata">Progress: <span id="progressPercentage">0%</span></p>
     </div>
     <div class="center">
-        <h1>AI Generated Frame</h1>
+        <img class="aiGeneratedImage" id="aiGeneratedImage">
+        <h1 id="aiText">AI Generated Frame</h1>
     </div>
     <div class="right">
         <div class="control-panel">
@@ -113,10 +114,10 @@ function updateProgressDisplay(data) {
     document.getElementById('timeRemaining').textContent = data.time_remaining;
     document.getElementById('framesRemaining').textContent = data.frames_remaining;
     document.getElementById('progressPercentage').textContent = data.progress_percentage + '%';
-    document.getElementById('currentFrame').textContent = data.current_frame;
-    document.getElementById('totalFramesToProcess').textContent = data.total_frames;
-    document.getElementById('progressBar').style.width = data.progress_percentage + '%';
-    
+    const timestamp = new Date().getTime();
+    document.getElementById('aiGeneratedImage').src = '{{ url_for("static", filename="temp/") }}' + (data.current_frame) + '.jpg?t=' + timestamp;
+    document.getElementById('aiText').style.display = 'none';
+
     if (data.frame_processing_time) {
         console.log(`Frame processed in ${data.frame_processing_time}`);
     }
@@ -134,8 +135,8 @@ function handleGenerationComplete(data) {
     setTimeout(() => {
         renderButton.textContent = 'Render Frames';
         // Reset progress display
-        document.getElementById('timeRemaining').textContent = '--:--:--';
-        document.getElementById('framesRemaining').textContent = '-';
+        document.getElementById('timeRemaining').textContent = '00:00:00';
+        document.getElementById('framesRemaining').textContent = '0';
         document.getElementById('progressPercentage').textContent = '0%';
         document.getElementById('currentFrame').textContent = '-';
         document.getElementById('totalFramesToProcess').textContent = '-';
@@ -294,8 +295,8 @@ function handleGenerationComplete(data) {
     setTimeout(() => {
         renderButton.textContent = 'Render Frames';
         // Reset progress display
-        document.getElementById('timeRemaining').textContent = '--:--:--';
-        document.getElementById('framesRemaining').textContent = '-';
+        document.getElementById('timeRemaining').textContent = '00:00:00';
+        document.getElementById('framesRemaining').textContent = '0';
         document.getElementById('progressPercentage').textContent = '0%';
     }, 3000);
     
