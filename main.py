@@ -179,6 +179,32 @@ def generate_frames(pipe, upscaler_dict,base_frames, seed, prompt, start_frame, 
         time_remaining = f'{hours}:{minutes}:{seconds}'
         print(f'Time Remaining -> {time_remaining}')
 
+
+def generate_frame(pipe, upscaler_dict,base_frames, seed, prompt, frame_index, upscale, compute_device):
+    cur_dir = os.getcwd()
+    temp_path = f'{cur_dir}/temp'
+    if not os.path.exists(temp_path):
+        os.makedirs(temp_path)
+
+    frame = base_frames[frame_index]
+    image = generate_ai_image(pipe,seed,frame,prompt)
+    if upscale:
+        upscaled_image = upscale_image(image, upscaler_dict['upscaler'], upscaler_dict['processor'], compute_device=compute_device)
+        upscaled_image.save(f'{cur_dir}/temp/{frame_index+1}.jpg')
+        del upscaled_image
+    else:
+        image.save(f'{cur_dir}/temp/{I+1}.jpg')
+    try:
+        torch.mps.empty_cache()
+    except:
+        pass
+    try:
+        torch.cuda.empty_cache()
+    except:
+        pass
+    del image
+
+
 def generate_video(framerate, audio, video_name):
     cur_dir = os.getcwd()
     final_path = f'{cur_dir}/final_videos'

@@ -35,8 +35,9 @@
 
         <hr>
 
-        <p class="metadata">Time remaining:</p>
-        <p class="metadata">Frames remaining:</p>
+        <p class="metadata">Time remaining: <span id="timeRemaining">00:00:00</span></p>
+        <p class="metadata">Frames remaining: <span id="framesRemaining">0</span></p>
+        <p class="metadata">Progress: <span id="progressPercentage">0%</span></p>
     </div>
     <div class="center">
         <h1>AI Generated Frame</h1>
@@ -44,12 +45,12 @@
     <div class="right">
         <div class="control-panel">
             <h2 class="prompt-heading">Prompt:</h2>
-            <textarea class="prompt" name="prompt" rows="5", required ></textarea>
+            <textarea id="promptInput" class="prompt" name="prompt" rows="5", required ></textarea>
     
             <h3 class="seed-heading">Seed value:</h3>
             <div class="seed-container">
-                <input class="seed-number" type="number">
-                <button class="refresh-button"><img class="refresh-arrow" src="{{ url_for('static', filename='refreshArrow.png') }}"></button>
+                <input class="seed-number" id="seedNumber" type="number" max="2147483647" value="{{seed}}">
+                <button class="refresh-button" id="refreshArrow"><img class="refresh-arrow" src="{{ url_for('static', filename='refreshArrow.png') }}"></button>
             </div>
             <div class="frame-select">
                 <div>
@@ -68,7 +69,7 @@
             <input type="checkbox" id="turbo" name="turbo">
             <label for="turbo">Turbo</label>
         </div>
-        <button class="right-button">Render Frames</button>
+        <button class="right-button" id="renderButton">Render Frames</button>
         <hr>
         <div class="checkbox-container-right">
             <input type="checkbox" id="includeSourceAudio" name="includeSourceAudio">
@@ -78,6 +79,84 @@
     </div>
 
 <script>
+let eventSource = null;
+
+function connectToProgressStream() {
+    if (eventSource) {
+        eventSource.close();
+    }
+    
+    eventSource = new EventSource('/progress_stream');
+    
+    eventSource.onmessage = function(event) {
+        const data = JSON.parse(event.data);
+        console.log('Received progress data:', data); // Debug log
+        
+        if (data.type === 'progress') {
+            updateProgressDisplay(data);
+        } else if (data.type === 'complete') {
+            handleGenerationComplete(data);
+        } else if (data.type === 'heartbeat') {
+            // Just a heartbeat, do nothing
+        }
+    };
+    
+    eventSource.onerror = function(event) {
+        console.log('EventSource failed.');
+        // Auto-reconnect after 3 seconds
+        setTimeout(connectToProgressStream, 3000);
+    };
+}
+
+function updateProgressDisplay(data) {
+    console.log('Updating display with:', data); // Debug log
+    document.getElementById('timeRemaining').textContent = data.time_remaining;
+    document.getElementById('framesRemaining').textContent = data.frames_remaining;
+    document.getElementById('progressPercentage').textContent = data.progress_percentage + '%';
+    document.getElementById('currentFrame').textContent = data.current_frame;
+    document.getElementById('totalFramesToProcess').textContent = data.total_frames;
+    document.getElementById('progressBar').style.width = data.progress_percentage + '%';
+    
+    if (data.frame_processing_time) {
+        console.log(`Frame processed in ${data.frame_processing_time}`);
+    }
+}
+
+function handleGenerationComplete(data) {
+    document.getElementById('timeRemaining').textContent = '00:00:00';
+    document.getElementById('framesRemaining').textContent = '0';
+    document.getElementById('progressPercentage').textContent = '100%';
+    document.getElementById('progressBar').style.width = '100%';
+    
+    const renderButton = document.getElementById('renderButton');
+    renderButton.textContent = 'Frames Generated';
+    
+    setTimeout(() => {
+        renderButton.textContent = 'Render Frames';
+        // Reset progress display
+        document.getElementById('timeRemaining').textContent = '--:--:--';
+        document.getElementById('framesRemaining').textContent = '-';
+        document.getElementById('progressPercentage').textContent = '0%';
+        document.getElementById('currentFrame').textContent = '-';
+        document.getElementById('totalFramesToProcess').textContent = '-';
+        document.getElementById('progressBar').style.width = '0%';
+    }, 3000);
+    
+    console.log(data.message);
+}
+
+// Connect to progress stream when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    connectToProgressStream();
+});
+
+// Close EventSource when page is unloaded
+window.addEventListener('beforeunload', function() {
+    if (eventSource) {
+        eventSource.close();
+    }
+});
+
     document.getElementById('importVideoFile').addEventListener('click', function() {
         document.getElementById('videoFileInput').click();
     });
@@ -125,6 +204,104 @@
                 }, 2000);
             });
     })
+
+    document.getElementById('refreshArrow').addEventListener('click', function(){
+        fetch('/generate_seed')
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('seedNumber').value = data.seed;
+        })
+    })
+
+document.getElementById('renderButton').addEventListener('click', function(){
+    const formData = new FormData();
+    
+    // Get all the form values
+    const prompt = document.getElementById('promptInput').value;
+    const seed = document.getElementById('seedNumber').value;
+    const startFrame = document.getElementById('startFrame').value;
+    const endFrame = document.getElementById('endFrame').value;
+    const turbo = document.getElementById('turbo').checked;
+    
+    // Basic validation
+    if (!prompt.trim()) {
+        alert('Please enter a prompt');
+        return;
+    }
+    
+    if (!startFrame || !endFrame) {
+        alert('Please select frame range');
+        return;
+    }
+    
+    if (parseInt(startFrame) > parseInt(endFrame)) {
+        alert('Start frame must be less than or equal to end frame');
+        return;
+    }
+    
+    // Add them to form data
+    formData.append('prompt', prompt);
+    formData.append('seed', seed);
+    formData.append('startFrame', startFrame);
+    formData.append('endFrame', endFrame);
+    formData.append('turbo', turbo ? 'on' : 'off');
+    
+    // Update button text and disable it
+    const renderButton = document.getElementById('renderButton');
+    renderButton.textContent = 'Starting Generation...';
+    renderButton.disabled = true;
+    
+    // Reset progress display
+    document.getElementById('timeRemaining').textContent = 'Starting...';
+    document.getElementById('framesRemaining').textContent = 'Calculating...';
+    document.getElementById('progressPercentage').textContent = '0%';
+    
+    fetch('/generate_frames', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            renderButton.textContent = 'Generating...';
+            console.log('Frame generation started');
+        } else {
+            renderButton.textContent = 'Error Starting Generation';
+            renderButton.disabled = false;
+            console.error('Error starting generation:', data.error);
+        }
+    })
+    .catch(error => {
+        renderButton.textContent = 'Network Error';
+        renderButton.disabled = false;
+        console.error('Network error:', error);
+        setTimeout(() => {
+            renderButton.textContent = 'Render Frames';
+        }, 3000);
+    });
+});
+
+// Re-enable button when generation completes
+function handleGenerationComplete(data) {
+    document.getElementById('timeRemaining').textContent = '00:00:00';
+    document.getElementById('framesRemaining').textContent = '0';
+    document.getElementById('progressPercentage').textContent = '100%';
+    
+    const renderButton = document.getElementById('renderButton');
+    renderButton.textContent = 'Frames Generated';
+    renderButton.disabled = false;
+    
+    setTimeout(() => {
+        renderButton.textContent = 'Render Frames';
+        // Reset progress display
+        document.getElementById('timeRemaining').textContent = '--:--:--';
+        document.getElementById('framesRemaining').textContent = '-';
+        document.getElementById('progressPercentage').textContent = '0%';
+    }, 3000);
+    
+    console.log(data.message);
+}
+
 </script>
 </body>
 </html>

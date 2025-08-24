@@ -128,6 +128,7 @@ label {
 
 .seed-number {
     max-width: 185px;
+    text-align: center;
 }
 
 .frame-select{
@@ -257,4 +258,12 @@ input[type="number"], textarea{
         align-items: center;
     }
 
+}
+
+
+/* Progress text styling */
+#timeRemaining, #framesRemaining, #progressPercentage, 
+#currentFrame, #totalFramesToProcess {
+    font-weight: bold;
+    color: #ffffff;
 }
