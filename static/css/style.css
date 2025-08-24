@@ -270,7 +270,7 @@ input[type="number"], textarea{
 
 .aiGeneratedImage {
     max-height: 500px;
-    width:  auto;
+    max-width: 500px;
     align-items: center;
     justify-content: center;
 }
