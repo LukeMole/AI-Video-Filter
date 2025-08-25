@@ -9,6 +9,12 @@ import json
 import time
 import threading
 import queue
+import gc
+
+try:
+    import torch
+except ImportError:
+    torch = None
 
 import main
 
@@ -19,6 +25,9 @@ pipe = ''
 video_data = ''
 progress_queue = queue.Queue()
 generation_active = False
+stop_generation = False
+current_pipe = None
+current_upscaler_dict = None
 
 
 def allowed_file(filename):
@@ -128,7 +137,7 @@ def send_progress_update(current_frame, total_frames, time_remaining, frame_proc
 
 @app.route('/generate_frames', methods=['GET','POST'])
 def generate_selected_frames():
-    global seed, generation_active
+    global seed, generation_active, stop_generation
     
     if generation_active:
         return jsonify({'error': 'Generation already in progress'}), 400
@@ -148,17 +157,18 @@ def generate_selected_frames():
     
     # Start generation in background thread
     def generate_frames_background():
-        global generation_active
+        global generation_active, stop_generation, current_pipe, current_upscaler_dict
         generation_active = True
+        stop_generation = False
         
         try:
             compute_device = 'GPU'
-            pipe = main.initialise_ai(compute_device=compute_device, turbo=turbo)
-            upscaler_dict = main.initialise_upscaler(compute_device=compute_device)
+            current_pipe = main.initialise_ai(compute_device=compute_device, turbo=turbo)
+            current_upscaler_dict = main.initialise_upscaler(compute_device=compute_device)
         except:
             compute_device = 'CPU'
-            pipe = main.initialise_ai(compute_device=compute_device, turbo=turbo)
-            upscaler_dict = main.initialise_upscaler(compute_device=compute_device)
+            current_pipe = main.initialise_ai(compute_device=compute_device, turbo=turbo)
+            current_upscaler_dict = main.initialise_upscaler(compute_device=compute_device)
 
         total_frames = end_frame - start_frame + 1
         
@@ -168,6 +178,11 @@ def generate_selected_frames():
         frame_times = []  # Track processing times for better estimation
         
         for i, frame_idx in enumerate(range(start_frame-1, end_frame)):
+            # Check if generation should stop
+            if stop_generation:
+                print("Generation stopped by user")
+                break
+                
             start_time = datetime.now()
             
             # Send progress before processing frame
@@ -187,7 +202,12 @@ def generate_selected_frames():
                 estimated_time = f'{hours:02d}:{minutes:02d}:{seconds:02d}'
                 send_progress_update(frames_processed, total_frames, estimated_time, None)
             
-            main.generate_frame(pipe, upscaler_dict, video_data['frames'], 
+            # Check stop flag again before processing frame
+            if stop_generation:
+                print("Generation stopped by user")
+                break
+                
+            main.generate_frame(current_pipe, current_upscaler_dict, video_data['frames'], 
                               seed_val, prompt, frame_idx, upscale=True, 
                               compute_device=compute_device)
 
@@ -219,12 +239,13 @@ def generate_selected_frames():
             
             print(f'Frame {frame_idx + 1} processed. Time Remaining -> {time_remaining}')
         
-        # Send completion message
-        completion_data = {
-            'type': 'complete',
-            'message': 'All frames generated successfully!'
-        }
-        progress_queue.put_nowait(completion_data)
+        # Only send completion message if not stopped
+        if not stop_generation:
+            completion_data = {
+                'type': 'complete',
+                'message': 'All frames generated successfully!'
+            }
+            progress_queue.put_nowait(completion_data)
         
         generation_active = False
     
@@ -240,6 +261,69 @@ def generate_selected_frames():
 def generation_status():
     global generation_active
     return jsonify({'active': generation_active})
+
+
+@app.route('/stop_generation', methods=['POST'])
+def stop_generation():
+    global stop_generation, generation_active, current_pipe, current_upscaler_dict
+    
+    # Set stop flag
+    stop_generation = True
+    
+    # Clear AI models from memory - don't move to CPU, just delete directly
+    if current_pipe is not None:
+        try:
+            # Just delete the pipeline directly without moving to CPU
+            del current_pipe
+            current_pipe = None
+            print("AI pipeline cleared from GPU memory")
+        except Exception as e:
+            print(f"Error clearing pipe: {e}")
+            current_pipe = None
+    
+    if current_upscaler_dict is not None:
+        try:
+            # Just delete the upscaler directly without moving to CPU
+            del current_upscaler_dict
+            current_upscaler_dict = None
+            print("Upscaler cleared from GPU memory")
+        except Exception as e:
+            print(f"Error clearing upscaler: {e}")
+            current_upscaler_dict = None
+    
+    # Force garbage collection
+    gc.collect()
+    
+    # Clear GPU cache
+    if torch:
+        try:
+            if torch.cuda.is_available():
+                torch.cuda.empty_cache()
+                print("CUDA cache cleared")
+            elif torch.backends.mps.is_available():
+                torch.mps.empty_cache()
+                print("MPS cache cleared")
+        except Exception as e:
+            print(f"Error clearing GPU cache: {e}")
+    
+    # Send stop message to progress stream
+    stop_data = {
+        'type': 'stopped',
+        'message': 'Generation stopped by user'
+    }
+    
+    try:
+        progress_queue.put_nowait(stop_data)
+    except queue.Full:
+        # Clear queue and add stop message
+        while not progress_queue.empty():
+            try:
+                progress_queue.get_nowait()
+            except queue.Empty:
+                break
+        progress_queue.put_nowait(stop_data)
+    
+    return jsonify({'success': True, 'message': 'Generation stopped'})
 
 
 if __name__ == "__main__":

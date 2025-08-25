@@ -97,6 +97,8 @@ function connectToProgressStream() {
             updateProgressDisplay(data);
         } else if (data.type === 'complete') {
             handleGenerationComplete(data);
+        } else if (data.type === 'stopped') {
+            handleGenerationStopped(data);
         } else if (data.type === 'heartbeat') {
             // Just a heartbeat, do nothing
         }
@@ -115,8 +117,10 @@ function updateProgressDisplay(data) {
     document.getElementById('framesRemaining').textContent = data.frames_remaining;
     document.getElementById('progressPercentage').textContent = data.progress_percentage + '%';
     const timestamp = new Date().getTime();
-    document.getElementById('aiGeneratedImage').src = '{{ url_for("static", filename="temp/") }}' + (data.current_frame) + '.jpg?t=' + timestamp;
-    document.getElementById('aiText').style.display = 'none';
+    if (data.current_frame !=0){
+        document.getElementById('aiGeneratedImage').src = '{{ url_for("static", filename="temp/") }}' + (data.current_frame) + '.jpg?t=' + timestamp;
+        document.getElementById('aiText').style.display = 'none';
+    }
 
     if (data.frame_processing_time) {
         console.log(`Frame processed in ${data.frame_processing_time}`);
@@ -127,10 +131,10 @@ function handleGenerationComplete(data) {
     document.getElementById('timeRemaining').textContent = '00:00:00';
     document.getElementById('framesRemaining').textContent = '0';
     document.getElementById('progressPercentage').textContent = '100%';
-    document.getElementById('progressBar').style.width = '100%';
     
     const renderButton = document.getElementById('renderButton');
     renderButton.textContent = 'Frames Generated';
+    renderButton.disabled = false;
     
     setTimeout(() => {
         renderButton.textContent = 'Render Frames';
@@ -138,9 +142,24 @@ function handleGenerationComplete(data) {
         document.getElementById('timeRemaining').textContent = '00:00:00';
         document.getElementById('framesRemaining').textContent = '0';
         document.getElementById('progressPercentage').textContent = '0%';
-        document.getElementById('currentFrame').textContent = '-';
-        document.getElementById('totalFramesToProcess').textContent = '-';
-        document.getElementById('progressBar').style.width = '0%';
+    }, 3000);
+    
+    console.log(data.message);
+}
+
+function handleGenerationStopped(data) {
+    console.log('handleGenerationStopped called with:', data);
+    const renderButton = document.getElementById('renderButton');
+    renderButton.textContent = 'Generation Stopped';
+    renderButton.disabled = false;
+    
+    // Reset progress display
+    document.getElementById('timeRemaining').textContent = '00:00:00';
+    document.getElementById('framesRemaining').textContent = '0';
+    document.getElementById('progressPercentage').textContent = '0%';
+    
+    setTimeout(() => {
+        renderButton.textContent = 'Render Frames';
     }, 3000);
     
     console.log(data.message);
@@ -215,6 +234,64 @@ window.addEventListener('beforeunload', function() {
     })
 
 document.getElementById('renderButton').addEventListener('click', function(){
+    const renderButton = document.getElementById('renderButton');
+    
+    // Check if currently generating (button text indicates generation state)
+    if (renderButton.textContent === 'Generating...' || renderButton.textContent === 'Starting Generation...') {
+        // Stop generation
+        renderButton.textContent = 'Stopping...';
+        renderButton.disabled = true;
+        
+        // Set a failsafe timeout to re-enable button in case something goes wrong
+        const failsafeTimeout = setTimeout(() => {
+            console.log('Failsafe: Re-enabling button after timeout');
+            renderButton.disabled = false;
+            renderButton.textContent = 'Render Frames';
+        }, 5000); // 5 second failsafe
+        
+        fetch('/stop_generation', {
+            method: 'POST'
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Clear the failsafe timeout since we got a response
+            clearTimeout(failsafeTimeout);
+            
+            if (data.success) {
+                console.log('Generation stopped successfully');
+                // Re-enable the button immediately
+                renderButton.disabled = false;
+                renderButton.textContent = 'Generation Stopped';
+                
+                // Reset to normal after a delay
+                setTimeout(() => {
+                    renderButton.textContent = 'Render Frames';
+                }, 2000);
+            } else {
+                console.error('Error stopping generation:', data.error);
+                renderButton.textContent = 'Error Stopping';
+                renderButton.disabled = false;
+                setTimeout(() => {
+                    renderButton.textContent = 'Render Frames';
+                }, 3000);
+            }
+        })
+        .catch(error => {
+            // Clear the failsafe timeout
+            clearTimeout(failsafeTimeout);
+            
+            console.error('Network error stopping generation:', error);
+            renderButton.textContent = 'Network Error';
+            renderButton.disabled = false;
+            setTimeout(() => {
+                renderButton.textContent = 'Render Frames';
+            }, 3000);
+        });
+        
+        return;
+    }
+    
+    // Start generation (existing code)
     const formData = new FormData();
     
     // Get all the form values
@@ -248,7 +325,6 @@ document.getElementById('renderButton').addEventListener('click', function(){
     formData.append('turbo', turbo ? 'on' : 'off');
     
     // Update button text and disable it
-    const renderButton = document.getElementById('renderButton');
     renderButton.textContent = 'Starting Generation...';
     renderButton.disabled = true;
     
@@ -265,6 +341,7 @@ document.getElementById('renderButton').addEventListener('click', function(){
     .then(data => {
         if (data.success) {
             renderButton.textContent = 'Generating...';
+            renderButton.disabled = false; // Enable so user can click to stop
             console.log('Frame generation started');
         } else {
             renderButton.textContent = 'Error Starting Generation';
@@ -281,27 +358,6 @@ document.getElementById('renderButton').addEventListener('click', function(){
         }, 3000);
     });
 });
-
-// Re-enable button when generation completes
-function handleGenerationComplete(data) {
-    document.getElementById('timeRemaining').textContent = '00:00:00';
-    document.getElementById('framesRemaining').textContent = '0';
-    document.getElementById('progressPercentage').textContent = '100%';
-    
-    const renderButton = document.getElementById('renderButton');
-    renderButton.textContent = 'Frames Generated';
-    renderButton.disabled = false;
-    
-    setTimeout(() => {
-        renderButton.textContent = 'Render Frames';
-        // Reset progress display
-        document.getElementById('timeRemaining').textContent = '00:00:00';
-        document.getElementById('framesRemaining').textContent = '0';
-        document.getElementById('progressPercentage').textContent = '0%';
-    }, 3000);
-    
-    console.log(data.message);
-}
 
 </script>
 </body>

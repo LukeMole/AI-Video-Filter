@@ -30,6 +30,8 @@ def initialise_ai(compute_device, turbo=False):
             else:
                 pipe = pipe.to("cuda")
         else:
+            # For CPU, use float32 to avoid issues
+            pipe = StableDiffusionInstructPix2PixPipeline.from_pretrained(model_id, torch_dtype=torch.float32, safety_checker=None)
             pipe = pipe.to('cpu')
 
         pipe.scheduler = EulerAncestralDiscreteScheduler.from_config(pipe.scheduler.config)
@@ -58,8 +60,14 @@ def initialise_upscaler(compute_device):
     if compute_device == 'GPU':
         if OS == 'darwin':
             upscaler = upscaler.to("mps")
+            # Ensure all parameters are moved to MPS
+            for param in upscaler.parameters():
+                param.data = param.data.to("mps")
         else:
             upscaler = upscaler.to("cuda")
+            # Ensure all parameters are moved to CUDA
+            for param in upscaler.parameters():
+                param.data = param.data.to("cuda")
     else:
         upscaler = upscaler.to('cpu')
 
@@ -193,7 +201,7 @@ def generate_frame(pipe, upscaler_dict,base_frames, seed, prompt, frame_index, u
         upscaled_image.save(f'{cur_dir}/static/temp/{frame_index+1}.jpg')
         del upscaled_image
     else:
-        image.save(f'{cur_dir}/static/temp/{I+1}.jpg')
+        image.save(f'{cur_dir}/static/temp/{frame_index+1}.jpg')
     try:
         torch.mps.empty_cache()
     except:
