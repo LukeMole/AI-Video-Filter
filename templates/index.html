@@ -73,8 +73,8 @@
         <button class="right-button" id="renderButton">Render Frames</button>
         <hr>
         <div class="checkbox-container-right">
-            <input type="checkbox" id="includeSourceAudio" name="includeSourceAudio">
-            <label for="includeSourceAudio">Include source audio</label>
+            <input type="checkbox" id="includeSourceAudio" name="includeSourceAudio" disabled>
+            <label id="includeSourceAudioLabel" for="includeSourceAudio" style="color: #BABABA;">Include source audio</label>
         </div>
         <button class="right-button">Compile Frames</button>
     </div>
@@ -211,6 +211,8 @@ window.addEventListener('beforeunload', function() {
             document.getElementById('startFrame').value = 1;
             document.getElementById('endFrame').value = data.frames;
             document.getElementById('endFrame').max = data.frames;
+            document.getElementById('includeSourceAudio').disabled = false;
+            document.getElementById('includeSourceAudioLabel').style.color = '#FFFFFF';
         })
         .catch(error => {
             uploadButton.textContent = 'Import error'
