@@ -115,7 +115,14 @@ def get_video_data(video_name, half_fps=False):
 
     #get audio
     cur_dir = os.getcwd()
-    audio = moviepy.VideoFileClip(f'{cur_dir}/{video_name}').audio
+    try:
+        audio = moviepy.VideoFileClip(f'{cur_dir}/uploads/{video_name}').audio
+        print(f"Audio extraction successful: {audio is not None}")
+        if audio is not None:
+            print(f"Audio duration: {audio.duration}")
+    except Exception as e:
+        print(f"Error extracting audio: {e}")
+        audio = None
     #goes through every frame and changes its color, resizes it and appends it to the frames list
     # Process each frame
     second_frame = False
@@ -213,11 +220,15 @@ def generate_frame(pipe, upscaler_dict,base_frames, seed, prompt, frame_index, u
     del image
 
 
-def generate_video(framerate, video_name, audio=None):
+def generate_video(framerate, video_name, audio):
     cur_dir = os.getcwd()
     final_path = f'{cur_dir}/final_videos'
     if not os.path.exists(final_path):
         os.makedirs(final_path)
+
+    print(f"Generate video called with audio: {audio is not None}")
+    if audio is not None:
+        print(f"Audio type: {type(audio)}, duration: {getattr(audio, 'duration', 'No duration attr')}")
 
     frames = os.listdir(f'{cur_dir}/static/temp')
     frame_numbers = []
@@ -232,8 +243,13 @@ def generate_video(framerate, video_name, audio=None):
         sorted_frames.append(image)
 
     final_video = moviepy.concatenate_videoclips(sorted_frames, method='compose')
-    final_video.audio = audio
-    final_video.write_videofile(f'{video_name}.mp4', fps=framerate)
+    if audio is not None:
+        final_video.audio = audio
+        print("Audio assigned to final video")
+    else:
+        print("No audio to assign to final video")
+    
+    final_video.write_videofile(f'{final_path}/{video_name}.mp4', fps=framerate)
     print(frame_numbers)
     print(frames)
 

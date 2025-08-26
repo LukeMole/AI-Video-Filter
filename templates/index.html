@@ -76,7 +76,7 @@
             <input type="checkbox" id="includeSourceAudio" name="includeSourceAudio" disabled>
             <label id="includeSourceAudioLabel" for="includeSourceAudio" style="color: #BABABA;">Include source audio</label>
         </div>
-        <button id="compileFrames" class="right-button">Compile Frames</button>
+        <button id="compileFrames" class="right-button" style="color:#BABABA" disabled>Compile Frames</button>
     </div>
 
 <script>
@@ -219,6 +219,8 @@ window.addEventListener('beforeunload', function() {
             document.getElementById('endFrame').max = data.frames;
             document.getElementById('includeSourceAudio').disabled = false;
             document.getElementById('includeSourceAudioLabel').style.color = '#FFFFFF';
+            document.getElementById('compileFrames').disabled = false;
+            document.getElementById('compileFrames').style.color = '#FFFFFF';
         })
         .catch(error => {
             uploadButton.textContent = 'Import error'
@@ -370,6 +372,67 @@ document.getElementById('renderButton').addEventListener('click', function(){
         }, 3000);
     });
 });
+
+document.getElementById('compileFrames').addEventListener('click', function(){
+    const compileButton = document.getElementById('compileFrames');
+    const includeAudio = document.getElementById('includeSourceAudio').checked;
+    
+    const formData = new FormData();
+    formData.append('includeAudio',includeAudio ? 'on':'off');
+    compileButton.textContent = 'Compiling...';
+    compileButton.disabled = true;
+
+    fetch('/compile_frames',{
+        method: 'POST',
+        body:formData
+    })
+    .then(response => {
+        if (response.ok) {
+            // Check if response is JSON (error) or blob (success)
+            const contentType = response.headers.get('content-type');
+            if (contentType && contentType.includes('application/json')) {
+                // This is an error response
+                return response.json().then(errorData => {
+                    throw new Error(errorData.error || 'Compilation failed');
+                });
+            } else {
+                // This is a blob (video file)
+                const filename = 'compiled_video.mp4';
+                return response.blob().then(blob => ({blob, filename}));
+            }
+        } else {
+            return response.json().then(errorData => {
+                throw new Error(errorData.error || 'Compilation failed');
+            });
+        }
+    })
+    .then(({blob, filename}) => {
+        // Create a download link and trigger it
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+        
+        compileButton.textContent = 'Compiled & Downloaded!';
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        compileButton.textContent = 'Compilation Error';
+        // Show the actual error message to user
+        alert('Error: ' + error.message);
+    })
+    .finally(() => {
+        compileButton.disabled = false;
+        setTimeout(() => {
+            compileButton.textContent = 'Compile Frames';
+        }, 3000);
+    });
+})
+
 
 </script>
 </body>

@@ -1,5 +1,5 @@
 from flask import Flask, render_template, jsonify, Response
-from flask import Flask, flash, request, redirect, url_for
+from flask import Flask, flash, request, redirect, url_for, send_file, send_from_directory
 from werkzeug.utils import secure_filename
 import os, shutil
 import math
@@ -18,11 +18,11 @@ except ImportError:
 
 import main
 
-UPLOAD_FOLDER = f"{os.getcwd}/video"
+UPLOAD_FOLDER = f"{os.getcwd}/final_videos"
 ALLOWED_EXTENSIONS = {'mp4',"mov"}
 seed = 0
 pipe = ''
-video_data = ''
+video_data = None
 progress_queue = queue.Queue()
 generation_active = False
 stop_generation = False
@@ -55,6 +55,7 @@ def process_video(filename):
 app = Flask(__name__)
 
 
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 @app.route('/', methods=['GET','POST'])
 def index():
@@ -325,10 +326,40 @@ def stop_generation():
     
     return jsonify({'success': True, 'message': 'Generation stopped'})
 
+@app.route("/uploads/<path:name>")
+def download_file(name):
+    return send_from_directory(
+        app.config['UPLOAD_FOLDER'], name, as_attachment=True
+    )
+
 @app.route('/compile_frames', methods=['POST','GET'])
 def compile_frames():
-    request.form.get('includeAudio')
-    main.generate_video()
+    global video_data
+    try:
+        # Check if video_data exists
+        if video_data is None:
+            return jsonify({'error': 'No video data available. Please upload a video first.'}), 400
+            
+        include_audio_checkbox = request.form.get('includeAudio')
+
+        audio = None
+        if include_audio_checkbox == 'on' and 'audio' in video_data:
+            audio = video_data['audio']
+        
+        # Generate the video
+        main.generate_video(video_data['framerate'], 'compiled_video', audio)
+        
+        # Check if the video file was created successfully
+        video_path = os.path.join(os.getcwd(), 'final_videos', 'compiled_video.mp4')
+        if os.path.exists(video_path):
+            # Return the compiled video file for download
+            return send_file(video_path, as_attachment=True, download_name='compiled_video.mp4')
+        else:
+            return jsonify({'error': 'Video compilation failed - output file not found'}), 500
+            
+    except Exception as e:
+        print(f"Error compiling video: {e}")
+        return jsonify({'error': f'Video compilation failed: {str(e)}'}), 500
 
 if __name__ == "__main__":
     app.run(debug=True, port=8000, use_reloader=False)
