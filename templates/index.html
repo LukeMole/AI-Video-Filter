@@ -76,7 +76,7 @@
             <input type="checkbox" id="includeSourceAudio" name="includeSourceAudio" disabled>
             <label id="includeSourceAudioLabel" for="includeSourceAudio" style="color: #BABABA;">Include source audio</label>
         </div>
-        <button class="right-button">Compile Frames</button>
+        <button id="compileFrames" class="right-button">Compile Frames</button>
     </div>
 
 <script>
@@ -128,6 +128,7 @@ function updateProgressDisplay(data) {
 }
 
 function handleGenerationComplete(data) {
+    const compileButton = document.getElementById('compileFrames');
     document.getElementById('timeRemaining').textContent = '00:00:00';
     document.getElementById('framesRemaining').textContent = '0';
     document.getElementById('progressPercentage').textContent = '100%';
@@ -145,9 +146,12 @@ function handleGenerationComplete(data) {
     }, 3000);
     
     console.log(data.message);
+    compileButton.disabled = false;
+    compileButton.style.color = '#FFFFFF';
 }
 
 function handleGenerationStopped(data) {
+    const compileButton = document.getElementById('compileFrames');
     console.log('handleGenerationStopped called with:', data);
     const renderButton = document.getElementById('renderButton');
     renderButton.textContent = 'Generation Stopped';
@@ -157,6 +161,8 @@ function handleGenerationStopped(data) {
     document.getElementById('timeRemaining').textContent = '00:00:00';
     document.getElementById('framesRemaining').textContent = '0';
     document.getElementById('progressPercentage').textContent = '0%';
+    compileButton.disabled = false;
+    compileButton.style.color = '#FFFFFF';
     
     setTimeout(() => {
         renderButton.textContent = 'Render Frames';
@@ -237,6 +243,7 @@ window.addEventListener('beforeunload', function() {
 
 document.getElementById('renderButton').addEventListener('click', function(){
     const renderButton = document.getElementById('renderButton');
+    const compileButton = document.getElementById('compileFrames');
     
     // Check if currently generating (button text indicates generation state)
     if (renderButton.textContent === 'Generating...' || renderButton.textContent === 'Starting Generation...') {
@@ -329,6 +336,9 @@ document.getElementById('renderButton').addEventListener('click', function(){
     // Update button text and disable it
     renderButton.textContent = 'Starting Generation...';
     renderButton.disabled = true;
+    compileButton.disabled = true;
+    compileButton.style.color = '#BABABA';
+
     
     // Reset progress display
     document.getElementById('timeRemaining').textContent = 'Starting...';

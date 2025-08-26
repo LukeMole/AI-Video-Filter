@@ -213,7 +213,7 @@ def generate_frame(pipe, upscaler_dict,base_frames, seed, prompt, frame_index, u
     del image
 
 
-def generate_video(framerate, audio, video_name):
+def generate_video(framerate, video_name, audio=None):
     cur_dir = os.getcwd()
     final_path = f'{cur_dir}/final_videos'
     if not os.path.exists(final_path):

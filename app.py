@@ -325,6 +325,10 @@ def stop_generation():
     
     return jsonify({'success': True, 'message': 'Generation stopped'})
 
+@app.route('/compile_frames', methods=['POST','GET'])
+def compile_frames():
+    request.form.get('includeAudio')
+    main.generate_video()
 
 if __name__ == "__main__":
     app.run(debug=True, port=8000, use_reloader=False)
