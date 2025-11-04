@@ -142,6 +142,10 @@ Visit these pages and accept the licenses:
 - [FLUX.1-dev](https://huggingface.co/black-forest-labs/FLUX.1-dev) 
 - [InstructPix2Pix](https://huggingface.co/timbrooks/instruct-pix2pix)
 
+#### 6. If You Are Using Cuda
+Install the cuda toolkit:
+- [Cuda Toolkit](https://developer.nvidia.com/cuda-downloads)
+
 ## 🎮 Usage
 
 ### Starting the Application
