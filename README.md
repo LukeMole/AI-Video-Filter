@@ -8,19 +8,9 @@ A powerful web-based application that applies AI-generated artistic filters to v
 - **Real-time Progress Tracking**: Live progress updates with time remaining estimates
 - **High-Quality Upscaling**: 4x resolution enhancement using Swin2SR
 - **Audio Preservation**: Maintain original audio in processed videos
-- **Flexible Processing**: Choose frame ranges, enable/disable features
 - **Web Interface**: User-friendly browser-based interface
 - **GPU/CPU Support**: Automatic GPU detection with CPU fallback
 - **Background Processing**: Non-blocking video processing with stop functionality
-
-## 🖼️ Supported Transformations
-
-- Anime/cartoon style conversion
-- Watercolor painting effects
-- Oil painting styles
-- Sketch/drawing transformations
-- Custom prompt-based artistic filters
-- And many more creative possibilities!
 
 ## 🎯 System Requirements
 
@@ -34,14 +24,10 @@ A powerful web-based application that applies AI-generated artistic filters to v
 - **RAM**: 16GB+ system RAM
 - **GPU VRAM**: 8GB+ VRAM or 16GB+ unified memory (Apple Silicon)
 - **Storage**: 20GB+ free space
-- **GPU**: NVIDIA RTX 3070/4060 or better, AMD RX 6700 XT or better, Apple M1/M2
+- **GPU**: NVIDIA RTX 3070/4060 or better, AMD RX 6700 XT or better, Apple M1 or newer
 
 ### Performance Notes
 - **AI Models Memory Usage**: ~5GB RAM/VRAM during processing
-- **Processing Speed**: 
-  - GPU: 5-30 seconds per frame (depending on GPU)
-  - CPU: 2-10 minutes per frame (much slower)
-- **Apple Silicon**: Excellent performance with MPS acceleration
 
 ## 🚀 Installation
 
