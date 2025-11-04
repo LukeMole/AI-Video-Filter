@@ -300,9 +300,9 @@ Solution: Ensure "Include Source Audio" is checked and FFmpeg is properly instal
 - **CLIP**: Text encoding for prompts
 
 ### Supported Hardware
-- **NVIDIA GPUs**: RTX 20/30/40 series with CUDA
+- **NVIDIA GPUs**: RTX 20 series or newer with CUDA
 - **AMD GPUs**: RX 6000/7000 series with ROCm (Linux)
-- **Apple Silicon**: M1/M2 with MPS acceleration
+- **Apple Silicon**: M1 or newer with MPS acceleration
 - **Intel/AMD CPUs**: Fallback support
 
 ## 🤝 Contributing
