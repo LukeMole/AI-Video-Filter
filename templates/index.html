@@ -67,8 +67,8 @@
         </div>
 
         <div class="checkbox-container-right">
-            <input type="checkbox" id="turbo" name="turbo">
-            <label for="turbo">Turbo</label>
+            <input type="checkbox" id="renderMode" name="renderMode">
+            <label for="renderMode">CPU Rendering</label>
         </div>
         <button class="right-button" id="renderButton">Render Frames</button>
         <hr>
@@ -310,7 +310,7 @@ document.getElementById('renderButton').addEventListener('click', function(){
     const seed = document.getElementById('seedNumber').value;
     const startFrame = document.getElementById('startFrame').value;
     const endFrame = document.getElementById('endFrame').value;
-    const turbo = document.getElementById('turbo').checked;
+    const renderMode = document.getElementById('renderMode').checked;
     
     // Basic validation
     if (!prompt.trim()) {
@@ -333,7 +333,7 @@ document.getElementById('renderButton').addEventListener('click', function(){
     formData.append('seed', seed);
     formData.append('startFrame', startFrame);
     formData.append('endFrame', endFrame);
-    formData.append('turbo', turbo ? 'on' : 'off');
+    formData.append('renderMode', renderMode ? 'on' : 'off');
     
     // Update button text and disable it
     renderButton.textContent = 'Starting Generation...';

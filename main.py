@@ -16,39 +16,22 @@ from transformers import AutoImageProcessor, Swin2SRForImageSuperResolution
 from diffusers import DiffusionPipeline
 
 
-def initialise_ai(compute_device, turbo=False):
+def initialise_ai(compute_device):
     OS = sys.platform
-
-    if turbo==False:
-        model = "stabilityai/stable-diffusion-xl-base-1.0"
-        model = "stabilityai/stable-diffusion-xl-refiner-1.0"
-        model_id = "timbrooks/instruct-pix2pix"
-        pipe = StableDiffusionInstructPix2PixPipeline.from_pretrained(model_id, torch_dtype=torch.float16, safety_checker=None)
-        if compute_device == 'GPU':
-            if OS == 'darwin':
-                pipe = pipe.to("mps")
-            else:
-                pipe = pipe.to("cuda")
+    model_id = "timbrooks/instruct-pix2pix"
+    pipe = StableDiffusionInstructPix2PixPipeline.from_pretrained(model_id, torch_dtype=torch.float16, safety_checker=None)
+    if compute_device == 'GPU':
+        if OS == 'darwin':
+            pipe = pipe.to("mps")
         else:
-            # For CPU, use float32 to avoid issues
-            pipe = StableDiffusionInstructPix2PixPipeline.from_pretrained(model_id, torch_dtype=torch.float32, safety_checker=None)
-            pipe = pipe.to('cpu')
-
-        pipe.scheduler = EulerAncestralDiscreteScheduler.from_config(pipe.scheduler.config)
-        return pipe
+            pipe = pipe.to("cuda")
     else:
-        model_id = 'sanaka87/ICEdit-MoE-LoRA'
-        pipe = DiffusionPipeline.from_pretrained("black-forest-labs/FLUX.1-Kontext-dev")
-        if compute_device == 'GPU':
-            if OS == 'darwin':
-                pipe = pipe.to("mps")
-            else:
-                pipe.enable_model_cpu_offload()
-                #pipe = pipe.to("cuda")
-        else:
-            pipe = pipe.to('cpu')
+        # For CPU, use float32 to avoid issues
+        pipe = StableDiffusionInstructPix2PixPipeline.from_pretrained(model_id, torch_dtype=torch.float32, safety_checker=None)
+        pipe = pipe.to('cpu')
 
-        return pipe
+    pipe.scheduler = EulerAncestralDiscreteScheduler.from_config(pipe.scheduler.config)
+    return pipe
 
 
 

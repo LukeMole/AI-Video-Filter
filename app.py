@@ -143,17 +143,18 @@ def generate_selected_frames():
     if generation_active:
         return jsonify({'error': 'Generation already in progress'}), 400
     
-    turbo_val = request.form.get('turbo')
+    render_val = request.form.get('renderMode')
     prompt = request.form.get('prompt')
     seed_val = request.form.get('seed')
     start_frame = int(request.form.get('startFrame'))
     end_frame = int(request.form.get('endFrame'))
 
-    turbo = False
-    if turbo_val == 'on':
-        turbo = True
+    cpu_render = False
+    if render_val == 'on':
+        print('_____________-----------defwkjrbgebhfverkj-----------------____________________')
+        cpu_render = True
     
-    print(f"Turbo: {turbo}, Prompt: {prompt}, Seed: {seed_val}")
+    print(f"Render mode: {cpu_render}, Prompt: {prompt}, Seed: {seed_val}")
     print(f"Frames: {start_frame} to {end_frame}")
     
     # Start generation in background thread
@@ -162,14 +163,21 @@ def generate_selected_frames():
         generation_active = True
         stop_generation = False
         
-        try:
-            compute_device = 'GPU'
-            current_pipe = main.initialise_ai(compute_device=compute_device, turbo=turbo)
-            current_upscaler_dict = main.initialise_upscaler(compute_device=compute_device)
-        except:
+        if(cpu_render):
             compute_device = 'CPU'
-            current_pipe = main.initialise_ai(compute_device=compute_device, turbo=turbo)
+            current_pipe = main.initialise_ai(compute_device=compute_device)
             current_upscaler_dict = main.initialise_upscaler(compute_device=compute_device)
+        else:
+            try:
+                compute_device = 'GPU'
+                current_pipe = main.initialise_ai(compute_device=compute_device)
+                current_upscaler_dict = main.initialise_upscaler(compute_device=compute_device)
+            except:
+                compute_device = 'CPU'
+                current_pipe = main.initialise_ai(compute_device=compute_device)
+                current_upscaler_dict = main.initialise_upscaler(compute_device=compute_device)
+
+
 
         total_frames = end_frame - start_frame + 1
         
