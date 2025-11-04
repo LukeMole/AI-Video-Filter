@@ -92,7 +92,7 @@ pip install torch torchvision torchaudio --index-url https://download.pytorch.or
 pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/rocm5.6
 ```
 
-**Apple Silicon (M1/M2):**
+**Apple Silicon (M1 Or Newer):**
 ```bash
 pip install torch torchvision torchaudio
 ```
