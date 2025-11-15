@@ -226,15 +226,16 @@ AI-Video-Filter/
 
 **For High-End Systems (16GB+ VRAM):**
 - Use GPU mode
-- Process full resolution
-- Enable upscaling for maximum quality
+- Keep upscaling enabled for maximum quality
 
 **For Mid-Range Systems (8-12GB VRAM):**
 - Use GPU mode
 - Enable "Halve FPS" for longer videos
 - Process shorter frame ranges
+- Keep upscaling enabled for maximum quality
 
-**For Low-End Systems (4-6GB VRAM):**
+
+**For Low-End Systems (4GB VRAM OR LESS):**
 - Use CPU mode
 - Enable "Halve FPS"
 - Process 10-30 frames at a time
